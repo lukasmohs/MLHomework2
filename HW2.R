@@ -7,10 +7,6 @@
 # Get dataset from: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_corrected.csv
 
 library(dplyr)
+install.packages("survival")
+data <- read.csv("IST_corrected.csv")
 
-# synthetic depression data
-depressionData = data.frame( # do not change "depressionData"
-  pregnant = c(1,0,1,1),
-  depressed = c("yes","yes","no","no") %>% as.factor(),
-  hospitalized = c(1, 0, 0, 0) %>% as.logical()
-) %>% tbl_df()
