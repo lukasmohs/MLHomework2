@@ -166,6 +166,8 @@ table1
 # i.e. so that we have a binary classification problem. 
 #What percent of patients are dead or dependent at 6 months in your train set and test set? 
 
+dataTrain = data[1:(nrow(data)/2),]
+dataTest = data[-(1:(nrow(data)/2)),]
 
 
 
