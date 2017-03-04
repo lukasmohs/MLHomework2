@@ -84,18 +84,18 @@ recall
 # Suppose you want to know the prevalence of diabetes in Pittsburgh. 
 # If you randomly survey 10 Pittsburghers and 5 of them state they have diabetes:
 # maximum likelihood estimate
-library(stats4)
-sample <- c(1,1,1,1,1,0,0,0,0,0)
-LL <- function(x) {
-  if(x<5) {
-    return 0;
-  } else if(x<10) {
-    return 1;
-  }
-}
-mle(LL)
+individualsWithDiabetes <- 5
+individualsWithoutDiabetes <- 5
+MLE <- individualsWithDiabetes/
+  (individualsWithDiabetes+individualsWithoutDiabetes)
+MLE #[1] 0.5
 
-# what is the maximum a posteriori?
+# what is the maximum a posteriori estimate for the prevalence of diabetes?
+alpha <- 11
+beta <- 21
+MAP <- (individualsWithDiabetes + alpha -1) /
+  (individualsWithDiabetes+individualsWithoutDiabetes+alpha+beta-2)
+MAP #[1] 0.375
 
 #Part 2: Analysis (9 points) Preliminaries
 # Y: What was the definition of the primary outcome in this study? 
@@ -130,4 +130,17 @@ mle(LL)
 
 # V, W: describe the covariates included and the population being studied.
 
-  
+
+# A patient was eligible for the study, if a physician identified an acute stroke,
+# where the severity was not taken into account, but the onset must have been less than 48 hours previously.
+# Further, there should be no evidence about intracranial haemorrhage
+# and no clear indications for heparin or aspirin and neither contraindications to heparin or aspirin.
+# In total, 19 435 patients were observed, which were between 16 and 99 years old with an average of 71.72 years.
+# 46% of the population was female and 54% male. The delay of the stroke and the randomization
+# was between one and 48 hours with a mean of 20.12 hours. 71% of the patients were awake during the onset,
+# the other 29% were sleeping. The conscious level of the patients was mostly alert (77%), 22% were classified as drowsy 
+# and 1% was without consciousness.
+
+# Construct a so-called Table 1 for groups of {aspirin, no aspirin} use, 
+# including information on age, gender, systolic blood pressure, and conscious state.
+library(tableone)
