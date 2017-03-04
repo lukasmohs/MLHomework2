@@ -60,8 +60,14 @@ TN <- sum(depressionData$hospitalized=="FALSE" & depressionData$predictedHospita
 depressionData <- mutate(depressionData, predictedHospitalized = ifelse(probabilityHospitalized > 0.5,"TRUE","FALSE"))
 
 #the accuracy of the model? 
-sum(depressionData$hospitalized==depressionData$predictedHospitalized) / nrow(depressionData) #[1] 0.75
+accuracy <- sum(depressionData$hospitalized==depressionData$predictedHospitalized) / nrow(depressionData) #[1] 0.75
+#or
+accuracy <- (TP+TN) / (TP+FN+FP+TN) 
+accuracy 
+
 #the sensitivity of the model? 
+sensitivity <- TP/(TP+FN) #[1] 1
+sensitivity
 
 #the specificity of the model? 
 specificity <- 1-(FP/(TN+FP))
@@ -74,3 +80,31 @@ precision
 #the recall of the model?
 recall <- TP/(TP+FN) #[1] 1
 recall
+
+# Suppose you want to know the prevalence of diabetes in Pittsburgh. 
+# If you randomly survey 10 Pittsburghers and 5 of them state they have diabetes:
+# maximum likelihood estimate
+library(stats4)
+sample <- c(1,1,1,1,1,0,0,0,0,0)
+LL <- function(x) {
+  if(x<5) {
+    return 0;
+  } else if(x<10) {
+    return 1;
+  }
+}
+mle(LL)
+
+# what is the maximum a posteriori?
+
+#Part 2: Analysis (9 points) Preliminaries
+# Y: What was the definition of the primary outcome in this study? 
+# Two primary outcomes were 'death within 14 days' and 'death, dependency, and incomplete recovery' at 6 months."
+
+# What is (are) the variable name(s) for the outcome?
+
+
+# U: what is (are) the variable name(s) for the intervention, and what is (are) their possible values?
+# V, W: describe the covariates included and the population being studied.
+
+  
