@@ -49,15 +49,28 @@ predictedOdds(tree, depressionData[3,], active=1) # = [1] 0.1
 # corresponding row by a string. I changed "tree[active,falseChild]" to tree[active,"falseChild"].
 
 # Add a column of the predicted probabilities of hospitalization to depressionData. Display it. 
-depressionData <- depressionData %>% mutate(predictOddsOnDataSet(tree,depressionData))
+depressionData <- depressionData %>% mutate(probabilityHospitalized = predictOddsOnDataSet(tree,depressionData))
+
+TP <- sum(depressionData$hospitalized=="TRUE" & depressionData$predictedHospitalized=="TRUE")
+FP <- sum(depressionData$hospitalized=="FALSE" & depressionData$predictedHospitalized=="TRUE")
+FN <- sum(depressionData$hospitalized=="TRUE" & depressionData$predictedHospitalized=="FALSE")
+TN <- sum(depressionData$hospitalized=="FALSE" & depressionData$predictedHospitalized=="FALSE")
 
 #Using a threshold probability of 0.5, what is:
- # the accuracy of the model? 
+depressionData <- mutate(depressionData, predictedHospitalized = ifelse(probabilityHospitalized > 0.5,"TRUE","FALSE"))
 
+#the accuracy of the model? 
+sum(depressionData$hospitalized==depressionData$predictedHospitalized) / nrow(depressionData) #[1] 0.75
 #the sensitivity of the model? 
 
 #the specificity of the model? 
+specificity <- 1-(FP/(TN+FP))
+specificity
 
 #the precision of the model? 
+precision <- TP/(TP+FP) #[1] 0.5
+precision
 
 #the recall of the model?
+recall <- TP/(TP+FN) #[1] 1
+recall
