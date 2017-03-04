@@ -143,4 +143,29 @@ MAP #[1] 0.375
 
 # Construct a so-called Table 1 for groups of {aspirin, no aspirin} use, 
 # including information on age, gender, systolic blood pressure, and conscious state.
+
+# install.packages("tableone")
 library(tableone)
+
+
+listVariables <- c("AGE", "SEX", "RSBP", "RCONSC")
+
+categorialVariables <- c("SEX","RCONSC")
+
+data$DASP14[data$DASP14 == "y"] <- "Y"
+data$DASP14[data$DASP14 == "n"] <- "N"
+data$DASP14 <- droplevels(data$DASP14)
+
+table1 <- CreateTableOne(vars = listVariables, data = data, 
+              factorVars = categorialVariables,  strata = "DASP14")
+table1
+
+#Machine learning analysis
+#Note: for this analysis, use a simple 50-50 train-test split.
+#Let our outcome of interest be 'dead or dependent at 6 months', 
+# i.e. so that we have a binary classification problem. 
+#What percent of patients are dead or dependent at 6 months in your train set and test set? 
+
+
+
+
