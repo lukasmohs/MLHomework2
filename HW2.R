@@ -51,13 +51,12 @@ predictedOdds(tree, depressionData[3,], active=1) # = [1] 0.1
 # Add a column of the predicted probabilities of hospitalization to depressionData. Display it. 
 depressionData <- depressionData %>% mutate(probabilityHospitalized = predictOddsOnDataSet(tree,depressionData))
 
+#Using a threshold probability of 0.5, what is:
+depressionData <- mutate(depressionData, predictedHospitalized = ifelse(probabilityHospitalized > 0.5,"TRUE","FALSE"))
 TP <- sum(depressionData$hospitalized=="TRUE" & depressionData$predictedHospitalized=="TRUE")
 FP <- sum(depressionData$hospitalized=="FALSE" & depressionData$predictedHospitalized=="TRUE")
 FN <- sum(depressionData$hospitalized=="TRUE" & depressionData$predictedHospitalized=="FALSE")
 TN <- sum(depressionData$hospitalized=="FALSE" & depressionData$predictedHospitalized=="FALSE")
-
-#Using a threshold probability of 0.5, what is:
-depressionData <- mutate(depressionData, predictedHospitalized = ifelse(probabilityHospitalized > 0.5,"TRUE","FALSE"))
 
 #the accuracy of the model? 
 accuracy <- sum(depressionData$hospitalized==depressionData$predictedHospitalized) / nrow(depressionData) #[1] 0.75
@@ -152,22 +151,49 @@ listVariables <- c("AGE", "SEX", "RSBP", "RCONSC")
 
 categorialVariables <- c("SEX","RCONSC")
 
-data$DASP14[data$DASP14 == "y"] <- "Y"
-data$DASP14[data$DASP14 == "n"] <- "N"
-data$DASP14 <- droplevels(data$DASP14)
+#data$DASP14[data$DASP14 == "y"] <- "Y"
+#data$DASP14[data$DASP14 == "n"] <- "N"
+#data$DASP14 <- droplevels(data$DASP14)
 
 table1 <- CreateTableOne(vars = listVariables, data = data, 
-              factorVars = categorialVariables,  strata = "DASP14")
+              factorVars = categorialVariables,  strata = "RXASP")
 table1
 
 #Machine learning analysis
 #Note: for this analysis, use a simple 50-50 train-test split.
-#Let our outcome of interest be 'dead or dependent at 6 months', 
-# i.e. so that we have a binary classification problem. 
-#What percent of patients are dead or dependent at 6 months in your train set and test set? 
-
 dataTrain = data[1:(nrow(data)/2),]
 dataTest = data[-(1:(nrow(data)/2)),]
 
+#Let our outcome of interest be 'dead or dependent at 6 months', 
+# i.e. so that we have a binary classification problem. 
+#What percent of patients are dead or dependent at 6 months in your train set and test set? 
+percentDeadInTrain <- sum(dataTrain$FDEAD=="Y" | dataTrain$FDENNIS=="Y")/nrow(dataTrain)
+# percentDeadInTrain <- sum(dataTrain$OCCODE==1 | dataTrain$OCCODE==2)/nrow(dataTrain) # [1] 0.6351755
+percentDeadInTrain # [1] 0.6336318
+percentDeadInTest <- sum(dataTest$FDEAD=="Y" | dataTrain$FDENNIS=="Y")/nrow(dataTest)
+#percentDeadInTest <- sum(dataTest$OCCODE==1 | dataTest$OCCODE==2)/nrow(dataTest) # [1] 0.6125746
+percentDeadInTest # [1] 0.550319
 
+# Choose which variables to include in your model. For example, remove variables for outcomes at 14 days 
+# (because if you are dead at 14 days you are certainly dead at 6 months).
+data<- data[ -c(which( colnames(data)=="DASP14" ):which( colnames(data)=="DDEADX" )) ]
+
+# Moreover, you should remove all features measured after baseline if you want to make 
+# a prediction based on baseline data
+
+
+
+# Similarly, specific indicators of the outcome should also be removed, 
+# since those are measurements past the baseline that are not our outcome of interest. 
+# For these reasons, you will need to remove clusters of variables. Justify your approach.
+data<- data[ -c(which( colnames(data)=="FLASTD" )) ] #remove: Date of last contact 
+data<- data[ -c(which( colnames(data)=="FDEADD" )) ] #remove: Date of death
+data<- data[ -c(which( colnames(data)=="FDEADC" )) ] #remove: Cause of death 
+data<- data[ -c(which( colnames(data)=="FDEADX" )) ] #remove: Comment on death
+data<- data[ -c(which( colnames(data)=="FRECOVER" )) ] #remove: Fully recovered at 6 month follow-up
+
+data<- data[ -c(which( colnames(data)=="ID" )) ] #remove: Indicator variable for death
+data<- data[ -c(which( colnames(data)=="TD" )) ] #remove: Time of death or censoring in days
+data<- data[ -c(which( colnames(data)=="EXPDD" ):which( colnames(data)=="ID14" )) ] # Predicted probability of XXX
+data<- data[ -c(which( colnames(data)=="DEAD1" ):ncol(data)) ] #remove: Indicator variables for specific causes of death
 
