@@ -100,11 +100,34 @@ mle(LL)
 #Part 2: Analysis (9 points) Preliminaries
 # Y: What was the definition of the primary outcome in this study? 
 # Two primary outcomes were 'death within 14 days' and 'death, dependency, and incomplete recovery' at 6 months."
+# Meanwhule the protocol just specified them as: 
+# (a) 'death from any cause within 14 days'
+# (b) 'death or dependency (ie, needing help from another person with daily activities) at 6 months'
 
 # What is (are) the variable name(s) for the outcome?
-
+# For both of the first study outcomes, the variables are called: 
+# 'DDEAD' and described as 'Dead on discharge form' and
+# 'FDEAD', which is described as 'Dead at six month follow-up (Y/N)'
 
 # U: what is (are) the variable name(s) for the intervention, and what is (are) their possible values?
+# DASP14 Aspirin given for 14 days or till death or discharge (Y/N)
+# DLH14 Low dose heparin given for 14 days or till death/discharge (Y/N)
+# DMH14 Medium dose heparin given for 14 days or till death/discharge (Y/N)
+# DHH14 Medium dose heparin given for 14 days etc in pilot (combine with above)
+# DOAC Other anticoagulants (Y/N)
+# DGORM Glycerol or manitol (Y/N)
+# DSTER Steroids (Y/N)
+# DCAA Calcium antagonists (Y/N)
+# DHAEMD Haemodilution (Y/N)
+# DCAREND Carotid surgery (Y/N)
+# DTHROMB Thrombolysis (Y/N)
+# DMAJNCH Major non-cerebral haemorrhage (Y/N)
+
+# DSCH Non trial subcutaneous heparin (Y/N)
+# DIVH Non trial intravenous heparin (Y/N)
+# DAP Non trial antiplatelet drug (Y/N)
+
+
 # V, W: describe the covariates included and the population being studied.
 
   
