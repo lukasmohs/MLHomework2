@@ -234,8 +234,9 @@ bayesPredictedProbabilities <- predict(nb, dataTest,"raw")
 library(ROCR) 
 
 bayesPred <- prediction( bayesPredictedProbabilities[,2], dataTest$FDEAD)
-bayesPerf <- performance(bayesPred,"tpr","fpr")
-plot(bayesPerf)
+bayesPerfROC <- performance(bayesPred,"tpr","fpr")
+bayesPerfPR <- performance(bayesPred, "prec", "rec")
+#plot(bayesPerf)
 
 ## fitted tan ##############
 dataTrain <- dataTrain[-c(which( colnames(dataTrain)=="RDATE"))]
@@ -245,8 +246,9 @@ fittedTan = bn.fit(tan, dataTrain)
 tanPredictedProbabilities <- attr(predict(object=fittedTan, data=dataTrain, prob=TRUE),"prob")
 tanPredictedProbabilities <- data.frame(t(tanPredictedProbabilities))
 tanPred <- prediction( tanPredictedProbabilities[2], dataTrain$FDEAD)
-tanPerf <- performance(tanPred,"tpr","fpr")
-plot(tanPerf)
+tanPerfROC <- performance(tanPred,"tpr","fpr")
+tanPerfPR <- performance(tanPred, "prec", "rec")
+#plot(tanPerf)
 
 ## Linear Regression ##############
 
@@ -256,13 +258,21 @@ lr <- glm(formula = FDEAD=="Y"  ~ .,
 lrPredictedProbabilities <- predict(lr, dataTrain, type="response")
 
 linPred <- prediction( lrPredictedProbabilities, dataTrain$FDEAD)
-linPerf <- performance(linPred,"tpr","fpr")
-plot(linPerf)
+linPerfROC <- performance(linPred,"tpr","fpr")
+linPerfPR <- performance(linPred, "prec", "rec")
+#plot(linPerf)
 
-
-plot( linPerf, col="blue")
-plot(tanPerf, add = TRUE, col="red")
-plot(bayesPerf, add = TRUE, col="green")
+plot(linPerfROC, col="blue")
+plot(tanPerfROC, add = TRUE, col="red")
+plot(bayesPerfROC, add = TRUE, col="green")
 legend(0.6,0.6,c("Linear Regression","Tree Augmented Naive Bayes","Bayes Network"),col=c("blue","red", "green"), lwd=5)
+
+plot(linPerfPR, col="blue")
+legend(0.6,0.9,c("Linear Regression"),col=c("blue"), lwd=5)
+plot(tanPerfPR, col="red")
+legend(0.6,0.9,c("Tree Augmented Naive Bayes"),col=c("red"), lwd=5)
+plot(bayesPerfPR, col="green")
+legend(0.6,0.9,c("Bayes Network"),col=c("green"), lwd=5)
+
 
 
