@@ -1,0 +1,126 @@
+# Homework 2
+  
+## Part 1: Concept questions (6 points)
+
+The code that follows introduces a toy data set, decision tree model, and two prediction functions.
+```{r eval=T, message=T}
+#import libraries
+library(vegan)
+library(survival)
+library(bnlearn)
+library(dplyr)
+library(ggplot2)
+library(lattice)
+library(mice)
+library(ROCR)
+library(tableone)
+library(caret)
+library(rpart)
+
+# synthetic depression data
+depressionData = data.frame( # do not change "depressionData"
+  pregnant = c(1,0,1,1),
+  depressed = c("yes","yes","no","no") %>% as.factor(),
+  hospitalized = c(1, 0, 0, 0) %>% as.logical()
+) %>% tbl_df()
+
+# tree: a model that outputs the odds of hospitalization from inputs of data (datums)
+tree = data.frame( # do not change "tree"
+  splitVariable = c("depressed", "pregnant", NA, NA, NA),
+  split = c("yes", 1, NA, NA, NA),
+  trueChild = c(2, 4, NA, NA, NA),
+  falseChild = c(3, 5, NA, NA, NA),
+  odds = c(NA, NA, 0.1, 2, 3)
+)
+
+predictOddsOnDataSet = function(tree, data, active = 1) {
+  apply(data, 1, (function(x) {predictedOdds(tree=tree, x, active=1)}) )
+}
+
+predictedOdds = function(tree, datum, active = 1) {
+  if(is.na(tree[active,"splitVariable"])) { # leaf of tree, so output value 
+    return(tree$odds[active])
+  } else { # internal node of tree, so continue down tr ee to true/false child
+    if( (datum[[tree[active,"splitVariable"] %>% as.character]] %>% as.character) == tree[active,"split"])
+      return(predictedOdds(tree, datum, active = tree[active,"trueChild"])) else
+        return(predictedOdds(tree, datum, active = tree[active,"falseChild"])) }
+}
+```
+  
+First, verify to yourself that, for the fourth patient in ```depressionData```, the tree should have output an odds of 0.1.
+
+Fix the function ```predictedOdds``` so that ```predictedOddsOnDataSet``` outputs the odds for each patient in data. Use the debugger functions like ```debugOnce(predictedOdds)``` or ```browser()``` to inspect the code. 
+
+What did you change?
+[response required]
+
+Add a column of the predicted probabilities of hospitalization to depressionData. Display it.
+[response required]
+
+Using a threshold probability of 0.5, what is:
+
+- the accuracy of the model?
+- the sensitivity of the model?
+- the specificity of the model?
+- the precision of the model?
+- the recall of the model?
+
+[responses required]  
+
+Suppose you want to know the prevalence of diabetes in Pittsburgh. If you randomly survey 10 Pittsburghers and 5 of them state they have diabetes:
+
+- what is the maximum likelihood estimate for the prevalence of diabetes?
+- given your strong belief specified by a beta prior of $\alpha = 11, \beta = 21$, what is the maximum a posteriori estimate for the prevalence of diabetes?
+[responses required]  
+
+## Part 2: Analysis (9 points)
+
+#### Preliminaries
+- **Y:** What was the definition of the primary outcome in this study?
+- What is (are) the variable name(s) for the outcome?
+
+- **U:** what is (are) the variable name(s) for the intervention, and what is (are) their possible values?
+
+- **V, W:** describe the covariates included and the population being studied.
+
+[responses required]
+
+- Construct a so-called Table 1 for groups of {aspirin, no aspirin} use, including information on age, gender, systolic blood pressure, and conscious state.
+```{r eval=T, message=F}
+
+# Get dataset from: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_corrected.csv
+
+data <- read.csv("IST_corrected.csv")
+```
+[response required]
+
+#### Machine learning analysis
+Note: for this analysis, use a simple 50-50 train-test split.
+
+Let our outcome of interest be "dead or dependent at 6 months", i.e. so that we have a binary classification problem. What percent of patients are dead or dependent at 6 months in your train set and test set?
+[response required]
+
+Choose which variables to include in your model. For example, remove variables for outcomes at 14 days (because if you are dead at 14 days you are certainly dead at 6 months). Moreover, you should remove all features measured after baseline if you want to make a prediction based on baseline data. Similarly, specific indicators of the outcome should also be removed, since those are measurements past the baseline that are not our outcome of interest. For these reasons, you will need to remove clusters of variables. Justify your approach.
+[response required]
+
+Of the remaining variables, decide whether to exclude variables with missing data, impute them, and/or use indicator variables. (Note that if you choose multiple imputation for some variables, you would need to pool the results when evaluating performance, however for homework you may just use the first imputed data set). Justify your approach.
+[response required]
+
+Use the following machine learning algorithms: logistic regression, naive Bayes, Tree Augmented Naive Bayes, and decision tree (specify any parameters you set that are not the default). The packages that you may find useful here are: "glm", "bnlearn", and "rpart", but you may use others if desired. In a table, report the accuracy with 95% confidence intervals for each algorithm.
+[response required]
+
+Construct an ROC (receiver operating characteristic) curve for each model and overlay them on a graph using ggplot. Include a legend. Hint: you will find the package "ROCR" helpful (or you might try the package "precrec", but I have not tested it).
+[response required]
+
+Construct a PR (precision recall) curve for each model. Include a legend.
+[response required]
+
+#### Conclusions
+Let's draw conclusions from this study. Specifically,
+
+- how well are we able to predict death or dependence at 6 months? [response required]
+- what is the average treatment effect of aspirin on death or dependence at 6 months? Is aspirin significantly better than the alternative? [response required]
+- of the algorithms tested, which algorithms perform the best? Justify your statement.
+[response required]
+
+Congratulations, you've conducted a comparison of machine learning algorithms for mortality prediction! Commit your solutions to your git repository with an informative comment. ```git push``` will help you upload it to the cloud service you choose to use (github, bitbucket, etc).

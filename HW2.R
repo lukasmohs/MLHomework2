@@ -203,14 +203,10 @@ dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(d
 # but you may use others if desired. In a table, report the accuracy with 95% confidence intervals for each algorithm.
 
 dataTrain$DOD <- as.factor(dataTrain$DOD)
-#dataTrain[] <- lapply(dataTrain, function(x) as.factor(x))
 
 dataTest$DOD <- as.factor(dataTest$DOD)
-#dataTest[] <- lapply(dataTest, function(x) as.factor(x))
-#dataTest <- dataTest[dataTest$FDEAD != "U",]
-#dataTest <- dataTest[dataTest$FDEAD != "",]
 
-#dataTest <- mutate(dataTest, FDEAD = ifelse(dataTest$FDEAD=="Y",1,0))
+
 
 #NB   ##############
 
@@ -289,4 +285,11 @@ legend(0.6,0.9,c("Bayes Network"),col=c("green"), lwd=5)
 plot(dtPerfPR, col="violet")
 legend(0.6,0.8,c("Decision Tree"),col=c("violet"), lwd=5)
 
-
+#how well are we able to predict death or dependence at 6 months? [response required]
+#what is the average treatment effect of aspirin on death or dependence at 6 months? Is aspirin significantly better than the alternative? [response required]
+data <- mutate(data,DOD=ifelse(OCCODE==1|OCCODE==2,1,0))
+aspirinATE <- (sum(data$DOD==1&data$RXASP=="N")-sum(data$DOD==1&data$RXASP=="Y"))/nrow(data)*100 #0.6%
+AspirinATE
+heparinATE <-(sum(data$DOD==1&data$RXHEP=="N")-sum(data$DOD==1&data$RXASP!="N"))/nrow(data)*100 #0.3%
+heparinATE
+#of the algorithms tested, which algorithms perform the best? Justify your statement. [response required]
