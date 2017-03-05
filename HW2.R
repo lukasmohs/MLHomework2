@@ -227,11 +227,34 @@ bayesTest <- bayesTest[bayesTest$FDEAD != "",]
 bayesTest <- bayesTest[ ,sapply(bayesTest, is.factor)]
 bayesTest <- droplevels(bayesTest)
 
-nb = naive.bayes(bayesTrain, "FDEAD")
-fitted = bn.fit(nb, bayesTest)
+library(e1071)
+nb = naiveBayes(FDEAD~.,bayesTrain)
 
 # res <- table(predict(fitted, bayesTest), bayesTest$FDEAD) 
-predictedProbabilities <- predicted=predict(fitted, bayesTest,"raw")
-pred <- prediction( predictedProbabilities, bayesTest$FDEAD)
+predictedProbabilities <- predict(nb, bayesTest,"raw")
+library(ROCR) 
+bayesTest <- mutate(bayesTest, FDEAD = ifelse(bayesTest$FDEAD=="Y",1,0))
+pred <- prediction( predictedProbabilities[,2], bayesTest$FDEAD)
 perf <- performance(pred,"tpr","fpr")
 plot(perf)
+
+## fitted tan
+#levels(bayesTest$RATRIAL)[1]=""
+#levels(bayesTest$RATRIAL)[2]="N"
+#levels(bayesTest$RATRIAL)[3]="Y"
+
+tanTrain <- dataTrain
+tanTrain <- tanTrain[tanTrain$FDEAD != "U",]
+tanTrain <- tanTrain[tanTrain$FDEAD != "",]
+tanTrain <- tanTrain[ ,sapply(dataTrain, is.factor)]
+tanTrain$FDEAD <- droplevels(tanTrain$FDEAD)
+
+tanTest <- dataTrain
+tanTest <- tanTest[tanTest$FDEAD != "U",]
+tanTest <- tanTest[tanTest$FDEAD != "",]
+tanTest <- tanTest[ ,sapply(dataTrain, is.factor)]
+tanTest$FDEAD <- droplevels(tanTest$FDEAD)
+
+tan = tree.bayes(tanTrain, "FDEAD")
+fittedTan = bn.fit(tan, tanTrain)
+predict(fittedTan, tanTest)
