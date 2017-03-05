@@ -4,7 +4,6 @@
 # You will draw from both your learning in lecture and discussion with the skills 
 # you are developing in the workshop sessions.
 
-# Get dataset from: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_corrected.csv
 
 library(vegan)
 library(survival)
@@ -17,6 +16,8 @@ library(ROCR)
 library(tableone)
 library(caret)
 library(rpart)
+
+# Get dataset from: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_corrected.csv
 
 data <- read.csv("IST_corrected.csv")
 
@@ -56,7 +57,8 @@ predictedOdds(tree, depressionData[3,], active=1) # = [1] 0.1
 # What did you change?
 # The recursive call of the predictedOdds() function had a syntax error in the last argument:
 # To either get the false or true child of the current node, one has indicate the value in the 
-# corresponding row by a string. I changed "tree[active,falseChild]" to tree[active,"falseChild"].
+# corresponding row by a string. I changed "tree[active,'falseChild']" to "tree[active,'falseChild']"
+# and tree[active,'trueChild']" to "tree[active,'trueChild']".
 
 # Add a column of the predicted probabilities of hospitalization to depressionData. Display it. 
 depressionData <- depressionData %>% mutate(probabilityHospitalized = predictOddsOnDataSet(tree,depressionData))
@@ -153,18 +155,8 @@ MAP #[1] 0.375
 # Construct a so-called Table 1 for groups of {aspirin, no aspirin} use, 
 # including information on age, gender, systolic blood pressure, and conscious state.
 
-# install.packages("tableone")
-
-
-
 listVariables <- c("AGE", "SEX", "RSBP", "RCONSC")
-
 categorialVariables <- c("SEX","RCONSC")
-
-#data$DASP14[data$DASP14 == "y"] <- "Y"
-#data$DASP14[data$DASP14 == "n"] <- "N"
-#data$DASP14 <- droplevels(data$DASP14)
-
 table1 <- CreateTableOne(vars = listVariables, data = data, 
               factorVars = categorialVariables,  strata = "RXASP")
 table1
@@ -176,6 +168,14 @@ dataTest = data[seq(2,nrow(data),2),]
 
 #Let our outcome of interest be 'dead or dependent at 6 months', 
 # i.e. so that we have a binary classification problem. 
+
+dataTrain <- mutate(dataTrain,DOD=ifelse(OCCODE==1|OCCODE==2,1,0))
+dataTest <- mutate(dataTest,DOD=ifelse(OCCODE==1|OCCODE==2,1,0))
+
+# leads to similar results
+#dataTrain <- mutate(dataTrain,DOD=ifelse(FDEAD=="Y"|FDENNIS=="Y",1,0))
+#dataTest <- mutate(dataTest,DOD=ifelse(FDEAD=="Y"|FDENNIS=="Y",1,0))
+
 #What percent of patients are dead or dependent at 6 months in your train set and test set? 
 percentDeadInTrain <- sum(dataTrain$FDEAD=="Y" | dataTrain$FDENNIS=="Y")/nrow(dataTrain)
 # percentDeadInTrain <- sum(dataTrain$OCCODE==1 | dataTrain$OCCODE==2)/nrow(dataTrain) # [1] 0.6351755
@@ -186,100 +186,89 @@ percentDeadInTest # [1] 0.550319
 
 # Choose which variables to include in your model. For example, remove variables for outcomes at 14 days 
 # (because if you are dead at 14 days you are certainly dead at 6 months).
-# data<- data[ -c(which( colnames(data)=="DASP14" ):which( colnames(data)=="DDEADX" )) ]
-
 # Moreover, you should remove all features measured after baseline if you want to make 
 # a prediction based on baseline data
-
-dataTrain <- dataTrain[c(which( colnames(dataTrain)=="HOSPNUM") : which( colnames(dataTrain)=="RXHEP"), which( colnames(dataTrain)=="CNTRYNUM"), which( colnames(dataTrain)=="FDEAD"))]
-dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(dataTest)=="RXHEP"), which( colnames(dataTest)=="CNTRYNUM"), which( colnames(dataTest)=="FDEAD"))]
-
-
 # Similarly, specific indicators of the outcome should also be removed, 
 # since those are measurements past the baseline that are not our outcome of interest. 
 # For these reasons, you will need to remove clusters of variables. Justify your approach.
 
-#data<- data[ -c(which( colnames(data)=="FLASTD" )) ] #remove: Date of last contact 
-#data<- data[ -c(which( colnames(data)=="FDEADD" )) ] #remove: Date of death
-#data<- data[ -c(which( colnames(data)=="FDEADC" )) ] #remove: Cause of death 
-#data<- data[ -c(which( colnames(data)=="FDEADX" )) ] #remove: Comment on death
-#data<- data[ -c(which( colnames(data)=="FRECOVER" )) ] #remove: Fully recovered at 6 month follow-up
+# First, just include the variables from sction: "Randomisation data" (according to: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf).
+# This includes all the information that were collected before Randomisation at the beginning of the study. 
 
-#data<- data[ -c(which( colnames(data)=="ID" )) ] #remove: Indicator variable for death
-#data<- data[ -c(which( colnames(data)=="TD" )) ] #remove: Time of death or censoring in days
-#data<- data[ -c(which( colnames(data)=="EXPDD" ):which( colnames(data)=="ID14" )) ] # Predicted probability of XXX
-#data<- data[ -c(which( colnames(data)=="DEAD1" ):ncol(data)) ] #remove: Indicator variables for specific causes of death
+dataTrain <- dataTrain[c(which( colnames(dataTrain)=="HOSPNUM") : which( colnames(dataTrain)=="RXHEP"), which( colnames(dataTrain)=="CNTRYNUM"), which( colnames(dataTrain)=="DOD"))]
+dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(dataTest)=="RXHEP"), which( colnames(dataTest)=="CNTRYNUM"), which( colnames(dataTest)=="DOD"))]
 
 # Use the following machine learning algorithms: logistic regression, naive Bayes, Tree Augmented Naive Bayes, and decision tree 
 # (specify any parameters you set that are not the default). The packages that you may find useful here are: 'glm', 'bnlearn', and 'rpart', 
 # but you may use others if desired. In a table, report the accuracy with 95% confidence intervals for each algorithm.
 
-dataTrain <- dataTrain[dataTrain$FDEAD != "U",]
-dataTrain <- dataTrain[dataTrain$FDEAD != "",]
-dataTrain <- dataTrain[ ,sapply(dataTrain, is.factor)]
-dataTrain <- droplevels(dataTrain)
-#dataTrain <- mutate(dataTrain, FDEAD = ifelse(dataTrain$FDEAD=="Y",1,0))
+dataTrain$DOD <- as.factor(dataTrain$DOD)
+#dataTrain[] <- lapply(dataTrain, function(x) as.factor(x))
 
-dataTest <- dataTest[dataTest$FDEAD != "U",]
-dataTest <- dataTest[dataTest$FDEAD != "",]
-dataTest <- dataTest[ ,sapply(dataTest, is.factor)]
-dataTest <- droplevels(dataTest)
-tanTest <- dataTest
-dataTest <- mutate(dataTest, FDEAD = ifelse(dataTest$FDEAD=="Y",1,0))
+dataTest$DOD <- as.factor(dataTest$DOD)
+#dataTest[] <- lapply(dataTest, function(x) as.factor(x))
+#dataTest <- dataTest[dataTest$FDEAD != "U",]
+#dataTest <- dataTest[dataTest$FDEAD != "",]
+
+#dataTest <- mutate(dataTest, FDEAD = ifelse(dataTest$FDEAD=="Y",1,0))
 
 #NB   ##############
+
 library(ROCR) 
 library(e1071)
-nb = naiveBayes(FDEAD~.,dataTrain)
-bayesAccuracy <- (sum(predict(nb, dataTest)=="Y" & dataTest$FDEAD==1) 
-                 + sum(predict(nb, dataTest)=="N" & dataTest$FDEAD==0) ) / nrow(dataTest)
+nb = naiveBayes(DOD~.,dataTrain)
+
+bayesAccuracy <- sum(predict(nb, dataTest)==dataTest$DOD) / nrow(dataTest)
 bayesPredictedProbabilities <- predict(nb, dataTest,"raw")
-bayesPred <- prediction( bayesPredictedProbabilities[,2], dataTest$FDEAD)
+bayesPred <- prediction( bayesPredictedProbabilities[,2], dataTest$DOD)
 bayesPerfROC <- performance(bayesPred,"tpr","fpr")
 bayesPerfPR <- performance(bayesPred, "prec", "rec")
 
 ## fitted tan ##############
-tan = tree.bayes(dataTrain, "FDEAD")
-fittedTan = bn.fit(tan, dataTrain)
-tanAccuracy <- (sum(predict(object=fittedTan, data=tanTest)=="Y" & dataTest$FDEAD==1) 
-                + sum(predict(object=fittedTan, data=tanTest)=="N" & dataTest$FDEAD==0) ) / nrow(tanTest)
+
+tanTrain <- dataTrain[ ,sapply(dataTrain, is.factor)]
+tanTest <- dataTest[ ,sapply(dataTest, is.factor)]
+
+tan = tree.bayes(tanTrain, "DOD")
+fittedTan = bn.fit(tan, tanTrain)
+tanAccuracy <- (sum(predict(object=fittedTan, data=tanTest)==tanTest$DOD)) / nrow(tanTest)
 tanPredictedProbabilities <- attr(predict(object=fittedTan, data=tanTest, prob=TRUE),"prob")
 tanPredictedProbabilities <- data.frame(t(tanPredictedProbabilities))
-tanPred <- prediction( tanPredictedProbabilities[2], dataTest$FDEAD)
+tanPred <- prediction( tanPredictedProbabilities[2], tanTest$DOD)
 tanPerfROC <- performance(tanPred,"tpr","fpr")
 tanPerfPR <- performance(tanPred, "prec", "rec")
 
 ## Linear Regression ##############
 
-lr <- glm(formula = FDEAD=="Y"  ~ .,
+lr <- glm(formula = DOD  ~ .,
           family=binomial(link="logit"),data = dataTrain, control = list(maxit = 100))
-lrAccuracy <- (sum(predict(lr, dataTest, type="response")>0.5 & dataTest$FDEAD==1) 
-                + sum(predict(lr, dataTest, type="response")<0.5 & dataTest$FDEAD==0) ) / nrow(dataTest)
+lrAccuracy <- (sum(predict(lr, dataTest, type="response")>0.5 & dataTest$DOD==1) 
+                + sum(predict(lr, dataTest, type="response")<0.5 & dataTest$DOD==0) ) / nrow(dataTest)
+
 lrPredictedProbabilities <- predict(lr, dataTest, type="response")
-linPred <- prediction( lrPredictedProbabilities, dataTest$FDEAD)
+linPred <- prediction( lrPredictedProbabilities, dataTest$DOD)
 linPerfROC <- performance(linPred,"tpr","fpr")
 linPerfPR <- performance(linPred, "prec", "rec")
 
 ## Decision Tree ##############
 
-tree <- rpart(FDEAD=="Y"~ .,
+tree <- rpart(DOD~ .,
              data=dataTrain,
              method="class")
-dtAccuracy <- (sum(predict(tree, dataTest, type="class")=="TRUE" & dataTest$FDEAD==1) 
-                + sum(predict(tree, dataTest, type="class")=="FALSE" & dataTest$FDEAD==0) ) / nrow(dataTest)
+dtAccuracy <- (sum(predict(tree, dataTest, type="class")==dataTest$DOD)) / nrow(dataTest)
 dtPredictedProbabilities <- predict(tree, dataTest, type = "prob")
-dtPred <- prediction( dtPredictedProbabilities[,2], dataTest$FDEAD)
+dtPred <- prediction( dtPredictedProbabilities[,2], dataTest$DOD)
 dtPerfROC <- performance(dtPred,"tpr","fpr")
 dtPerfPR <- performance(dtPred, "prec", "rec")
 
 ## Accuracy comparison
 # In a table, report the accuracy with 95% confidence intervals for each algorithm. 
 #table(c("Decision Tree","Linear Regression", "Tree Augmented Naive Bayes", "Naive Bayes"),c(dtAccuracy,lrAccurarcy,tanAccuracy,bayesAccuracy))
-accuracyComparisonMatrix <- matrix(c(dtAccuracy,lrAccurarcy,tanAccuracy,bayesAccuracy),ncol=4,byrow=TRUE)
+accuracyComparisonMatrix <- matrix(c(dtAccuracy,lrAccuracy,tanAccuracy,bayesAccuracy),ncol=4,byrow=TRUE)
 colnames(accuracyComparisonMatrix) <- c("Decision Tree","Linear Regression", "Tree Augmented Naive Bayes", "Naive Bayes")
 rownames(accuracyComparisonMatrix) <- c("Accuracy")
 accuracyComparisonTable <- as.table(accuracyComparisonMatrix)
-
+accuracyComparisonTable
 
 ## Plotting ##############
 
