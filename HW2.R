@@ -231,6 +231,8 @@ dataTest <- mutate(dataTest, FDEAD = ifelse(dataTest$FDEAD=="Y",1,0))
 library(ROCR) 
 library(e1071)
 nb = naiveBayes(FDEAD~.,dataTrain)
+bayesAccuracy <- (sum(predict(nb, dataTest)=="Y" & dataTest$FDEAD==1) 
+                 + sum(predict(nb, dataTest)=="N" & dataTest$FDEAD==0) ) / nrow(dataTest)
 bayesPredictedProbabilities <- predict(nb, dataTest,"raw")
 bayesPred <- prediction( bayesPredictedProbabilities[,2], dataTest$FDEAD)
 bayesPerfROC <- performance(bayesPred,"tpr","fpr")
@@ -239,6 +241,8 @@ bayesPerfPR <- performance(bayesPred, "prec", "rec")
 ## fitted tan ##############
 tan = tree.bayes(dataTrain, "FDEAD")
 fittedTan = bn.fit(tan, dataTrain)
+tanAccuracy <- (sum(predict(object=fittedTan, data=tanTest)=="Y" & dataTest$FDEAD==1) 
+                + sum(predict(object=fittedTan, data=tanTest)=="N" & dataTest$FDEAD==0) ) / nrow(tanTest)
 tanPredictedProbabilities <- attr(predict(object=fittedTan, data=tanTest, prob=TRUE),"prob")
 tanPredictedProbabilities <- data.frame(t(tanPredictedProbabilities))
 tanPred <- prediction( tanPredictedProbabilities[2], dataTest$FDEAD)
@@ -249,6 +253,8 @@ tanPerfPR <- performance(tanPred, "prec", "rec")
 
 lr <- glm(formula = FDEAD=="Y"  ~ .,
           family=binomial(link="logit"),data = dataTrain, control = list(maxit = 100))
+lrAccuracy <- (sum(predict(lr, dataTest, type="response")>0.5 & dataTest$FDEAD==1) 
+                + sum(predict(lr, dataTest, type="response")<0.5 & dataTest$FDEAD==0) ) / nrow(dataTest)
 lrPredictedProbabilities <- predict(lr, dataTest, type="response")
 linPred <- prediction( lrPredictedProbabilities, dataTest$FDEAD)
 linPerfROC <- performance(linPred,"tpr","fpr")
@@ -259,10 +265,21 @@ linPerfPR <- performance(linPred, "prec", "rec")
 tree <- rpart(FDEAD=="Y"~ .,
              data=dataTrain,
              method="class")
+dtAccuracy <- (sum(predict(tree, dataTest, type="class")=="TRUE" & dataTest$FDEAD==1) 
+                + sum(predict(tree, dataTest, type="class")=="FALSE" & dataTest$FDEAD==0) ) / nrow(dataTest)
 dtPredictedProbabilities <- predict(tree, dataTest, type = "prob")
 dtPred <- prediction( dtPredictedProbabilities[,2], dataTest$FDEAD)
 dtPerfROC <- performance(dtPred,"tpr","fpr")
 dtPerfPR <- performance(dtPred, "prec", "rec")
+
+## Accuracy comparison
+# In a table, report the accuracy with 95% confidence intervals for each algorithm. 
+#table(c("Decision Tree","Linear Regression", "Tree Augmented Naive Bayes", "Naive Bayes"),c(dtAccuracy,lrAccurarcy,tanAccuracy,bayesAccuracy))
+accuracyComparisonMatrix <- matrix(c(dtAccuracy,lrAccurarcy,tanAccuracy,bayesAccuracy),ncol=4,byrow=TRUE)
+colnames(accuracyComparisonMatrix) <- c("Decision Tree","Linear Regression", "Tree Augmented Naive Bayes", "Naive Bayes")
+rownames(accuracyComparisonMatrix) <- c("Accuracy")
+accuracyComparisonTable <- as.table(accuracyComparisonMatrix)
+
 
 ## Plotting ##############
 
@@ -270,7 +287,9 @@ plot(linPerfROC, col="blue")
 plot(tanPerfROC, add = TRUE, col="red")
 plot(bayesPerfROC, add = TRUE, col="green")
 plot(dtPerfROC, add = TRUE, col="violet")
-legend(0.6,0.7,c("Linear Regression","Tree Augmented Naive Bayes","Bayes Network","Decision Tree"),col=c("blue","red", "green","violet"), lwd=5)
+title(main="ROC Comparison of different Classifiers")
+legend(0.6,0.4,c("Linear Regression","Tree Augmented Naive Bayes","Bayes Network","Decision Tree"),
+       col=c("blue","red", "green","violet"), lwd=5, y.intersp = 0.4)
 
 plot(linPerfPR, col="blue")
 legend(0.6,0.9,c("Linear Regression"),col=c("blue"), lwd=5)
