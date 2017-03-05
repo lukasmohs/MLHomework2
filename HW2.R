@@ -213,7 +213,7 @@ dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(d
 # (specify any parameters you set that are not the default). The packages that you may find useful here are: 'glm', 'bnlearn', and 'rpart', 
 # but you may use others if desired. In a table, report the accuracy with 95% confidence intervals for each algorithm.
 
-#NB
+#NB   ##############
 
 bayesTrain <- dataTrain
 bayesTrain <- bayesTrain[bayesTrain$FDEAD != "U",]
@@ -234,27 +234,29 @@ nb = naiveBayes(FDEAD~.,bayesTrain)
 predictedProbabilities <- predict(nb, bayesTest,"raw")
 library(ROCR) 
 bayesTest <- mutate(bayesTest, FDEAD = ifelse(bayesTest$FDEAD=="Y",1,0))
-pred <- prediction( predictedProbabilities[,2], bayesTest$FDEAD)
-perf <- performance(pred,"tpr","fpr")
-plot(perf)
+bayesPred <- prediction( predictedProbabilities[,2], bayesTest$FDEAD)
+bayesPerf <- performance(bayesPred,"tpr","fpr")
+plot(bayesPerf)
 
-## fitted tan
-#levels(bayesTest$RATRIAL)[1]=""
-#levels(bayesTest$RATRIAL)[2]="N"
-#levels(bayesTest$RATRIAL)[3]="Y"
-
+## fitted tan ##############
 tanTrain <- dataTrain
+tanTrain <- tanTrain[-c(which( colnames(tanTrain)=="RDATE"))]
 tanTrain <- tanTrain[tanTrain$FDEAD != "U",]
 tanTrain <- tanTrain[tanTrain$FDEAD != "",]
-tanTrain <- tanTrain[ ,sapply(dataTrain, is.factor)]
+tanTrain <- tanTrain[ ,sapply(tanTrain, is.factor)]
 tanTrain$FDEAD <- droplevels(tanTrain$FDEAD)
 
-tanTest <- dataTrain
+tanTest <- dataTest
+tanTest <- tanTest[-c(which( colnames(tanTest)=="RDATE"))]
 tanTest <- tanTest[tanTest$FDEAD != "U",]
 tanTest <- tanTest[tanTest$FDEAD != "",]
-tanTest <- tanTest[ ,sapply(dataTrain, is.factor)]
+tanTest <- tanTest[ ,sapply(tanTest, is.factor)]
 tanTest$FDEAD <- droplevels(tanTest$FDEAD)
 
 tan = tree.bayes(tanTrain, "FDEAD")
 fittedTan = bn.fit(tan, tanTrain)
-predict(fittedTan, tanTest)
+predictedProbabilities <- attr(predict(object=fittedTan, data=tanTest, prob=TRUE),"prob")
+predictedProbabilities <- data.frame(t(predictedProbabilities))
+tanPred <- prediction( predictedProbabilities[2], tanTest$FDEAD)
+tanPerf <- performance(tanPred,"tpr","fpr")
+plot(tanPerf)
