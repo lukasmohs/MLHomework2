@@ -16,6 +16,7 @@ library(mice)
 library(ROCR)
 library(tableone)
 library(caret)
+library(rpart)
 
 data <- read.csv("IST_corrected.csv")
 
@@ -170,8 +171,8 @@ table1
 
 #Machine learning analysis
 #Note: for this analysis, use a simple 50-50 train-test split.
-dataTrain = data[1:(nrow(data)/2),]
-dataTest = data[-(1:(nrow(data)/2)),]
+dataTrain = data[seq(1,nrow(data),2),]
+dataTest = data[seq(2,nrow(data),2),]
 
 #Let our outcome of interest be 'dead or dependent at 6 months', 
 # i.e. so that we have a binary classification problem. 
@@ -217,55 +218,59 @@ dataTrain <- dataTrain[dataTrain$FDEAD != "U",]
 dataTrain <- dataTrain[dataTrain$FDEAD != "",]
 dataTrain <- dataTrain[ ,sapply(dataTrain, is.factor)]
 dataTrain <- droplevels(dataTrain)
+#dataTrain <- mutate(dataTrain, FDEAD = ifelse(dataTrain$FDEAD=="Y",1,0))
 
 dataTest <- dataTest[dataTest$FDEAD != "U",]
 dataTest <- dataTest[dataTest$FDEAD != "",]
 dataTest <- dataTest[ ,sapply(dataTest, is.factor)]
 dataTest <- droplevels(dataTest)
+tanTest <- dataTest
 dataTest <- mutate(dataTest, FDEAD = ifelse(dataTest$FDEAD=="Y",1,0))
 
 #NB   ##############
-
+library(ROCR) 
 library(e1071)
 nb = naiveBayes(FDEAD~.,dataTrain)
-
-# res <- table(predict(fitted, bayesTest), bayesTest$FDEAD) 
 bayesPredictedProbabilities <- predict(nb, dataTest,"raw")
-library(ROCR) 
-
 bayesPred <- prediction( bayesPredictedProbabilities[,2], dataTest$FDEAD)
 bayesPerfROC <- performance(bayesPred,"tpr","fpr")
 bayesPerfPR <- performance(bayesPred, "prec", "rec")
-#plot(bayesPerf)
 
 ## fitted tan ##############
-dataTrain <- dataTrain[-c(which( colnames(dataTrain)=="RDATE"))]
-
 tan = tree.bayes(dataTrain, "FDEAD")
 fittedTan = bn.fit(tan, dataTrain)
-tanPredictedProbabilities <- attr(predict(object=fittedTan, data=dataTrain, prob=TRUE),"prob")
+tanPredictedProbabilities <- attr(predict(object=fittedTan, data=tanTest, prob=TRUE),"prob")
 tanPredictedProbabilities <- data.frame(t(tanPredictedProbabilities))
-tanPred <- prediction( tanPredictedProbabilities[2], dataTrain$FDEAD)
+tanPred <- prediction( tanPredictedProbabilities[2], dataTest$FDEAD)
 tanPerfROC <- performance(tanPred,"tpr","fpr")
 tanPerfPR <- performance(tanPred, "prec", "rec")
-#plot(tanPerf)
 
 ## Linear Regression ##############
 
 lr <- glm(formula = FDEAD=="Y"  ~ .,
           family=binomial(link="logit"),data = dataTrain, control = list(maxit = 100))
-
-lrPredictedProbabilities <- predict(lr, dataTrain, type="response")
-
-linPred <- prediction( lrPredictedProbabilities, dataTrain$FDEAD)
+lrPredictedProbabilities <- predict(lr, dataTest, type="response")
+linPred <- prediction( lrPredictedProbabilities, dataTest$FDEAD)
 linPerfROC <- performance(linPred,"tpr","fpr")
 linPerfPR <- performance(linPred, "prec", "rec")
-#plot(linPerf)
+
+## Decision Tree ##############
+
+tree <- rpart(FDEAD=="Y"~ .,
+             data=dataTrain,
+             method="class")
+dtPredictedProbabilities <- predict(tree, dataTest, type = "prob")
+dtPred <- prediction( dtPredictedProbabilities[,2], dataTest$FDEAD)
+dtPerfROC <- performance(dtPred,"tpr","fpr")
+dtPerfPR <- performance(dtPred, "prec", "rec")
+
+## Plotting ##############
 
 plot(linPerfROC, col="blue")
 plot(tanPerfROC, add = TRUE, col="red")
 plot(bayesPerfROC, add = TRUE, col="green")
-legend(0.6,0.6,c("Linear Regression","Tree Augmented Naive Bayes","Bayes Network"),col=c("blue","red", "green"), lwd=5)
+plot(dtPerfROC, add = TRUE, col="violet")
+legend(0.6,0.7,c("Linear Regression","Tree Augmented Naive Bayes","Bayes Network","Decision Tree"),col=c("blue","red", "green","violet"), lwd=5)
 
 plot(linPerfPR, col="blue")
 legend(0.6,0.9,c("Linear Regression"),col=c("blue"), lwd=5)
@@ -273,6 +278,7 @@ plot(tanPerfPR, col="red")
 legend(0.6,0.9,c("Tree Augmented Naive Bayes"),col=c("red"), lwd=5)
 plot(bayesPerfPR, col="green")
 legend(0.6,0.9,c("Bayes Network"),col=c("green"), lwd=5)
-
+plot(dtPerfPR, col="violet")
+legend(0.6,0.8,c("Decision Tree"),col=c("violet"), lwd=5)
 
 
