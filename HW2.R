@@ -213,50 +213,56 @@ dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(d
 # (specify any parameters you set that are not the default). The packages that you may find useful here are: 'glm', 'bnlearn', and 'rpart', 
 # but you may use others if desired. In a table, report the accuracy with 95% confidence intervals for each algorithm.
 
+dataTrain <- dataTrain[dataTrain$FDEAD != "U",]
+dataTrain <- dataTrain[dataTrain$FDEAD != "",]
+dataTrain <- dataTrain[ ,sapply(dataTrain, is.factor)]
+dataTrain <- droplevels(dataTrain)
+
+dataTest <- dataTest[dataTest$FDEAD != "U",]
+dataTest <- dataTest[dataTest$FDEAD != "",]
+dataTest <- dataTest[ ,sapply(dataTest, is.factor)]
+dataTest <- droplevels(dataTest)
+dataTest <- mutate(dataTest, FDEAD = ifelse(dataTest$FDEAD=="Y",1,0))
+
 #NB   ##############
 
-bayesTrain <- dataTrain
-bayesTrain <- bayesTrain[bayesTrain$FDEAD != "U",]
-bayesTrain <- bayesTrain[bayesTrain$FDEAD != "",]
-bayesTrain <- bayesTrain[ ,sapply(dataTrain, is.factor)]
-bayesTrain <- droplevels(bayesTrain)
-
-bayesTest <- dataTest
-bayesTest <- bayesTest[bayesTest$FDEAD != "U",]
-bayesTest <- bayesTest[bayesTest$FDEAD != "",]
-bayesTest <- bayesTest[ ,sapply(bayesTest, is.factor)]
-bayesTest <- droplevels(bayesTest)
-
 library(e1071)
-nb = naiveBayes(FDEAD~.,bayesTrain)
+nb = naiveBayes(FDEAD~.,dataTrain)
 
 # res <- table(predict(fitted, bayesTest), bayesTest$FDEAD) 
-predictedProbabilities <- predict(nb, bayesTest,"raw")
+bayesPredictedProbabilities <- predict(nb, dataTest,"raw")
 library(ROCR) 
-bayesTest <- mutate(bayesTest, FDEAD = ifelse(bayesTest$FDEAD=="Y",1,0))
-bayesPred <- prediction( predictedProbabilities[,2], bayesTest$FDEAD)
+
+bayesPred <- prediction( bayesPredictedProbabilities[,2], dataTest$FDEAD)
 bayesPerf <- performance(bayesPred,"tpr","fpr")
 plot(bayesPerf)
 
 ## fitted tan ##############
-tanTrain <- dataTrain
-tanTrain <- tanTrain[-c(which( colnames(tanTrain)=="RDATE"))]
-tanTrain <- tanTrain[tanTrain$FDEAD != "U",]
-tanTrain <- tanTrain[tanTrain$FDEAD != "",]
-tanTrain <- tanTrain[ ,sapply(tanTrain, is.factor)]
-tanTrain$FDEAD <- droplevels(tanTrain$FDEAD)
+dataTrain <- dataTrain[-c(which( colnames(dataTrain)=="RDATE"))]
 
-tanTest <- dataTest
-tanTest <- tanTest[-c(which( colnames(tanTest)=="RDATE"))]
-tanTest <- tanTest[tanTest$FDEAD != "U",]
-tanTest <- tanTest[tanTest$FDEAD != "",]
-tanTest <- tanTest[ ,sapply(tanTest, is.factor)]
-tanTest$FDEAD <- droplevels(tanTest$FDEAD)
-
-tan = tree.bayes(tanTrain, "FDEAD")
-fittedTan = bn.fit(tan, tanTrain)
-predictedProbabilities <- attr(predict(object=fittedTan, data=tanTest, prob=TRUE),"prob")
-predictedProbabilities <- data.frame(t(predictedProbabilities))
-tanPred <- prediction( predictedProbabilities[2], tanTest$FDEAD)
+tan = tree.bayes(dataTrain, "FDEAD")
+fittedTan = bn.fit(tan, dataTrain)
+tanPredictedProbabilities <- attr(predict(object=fittedTan, data=dataTrain, prob=TRUE),"prob")
+tanPredictedProbabilities <- data.frame(t(tanPredictedProbabilities))
+tanPred <- prediction( tanPredictedProbabilities[2], dataTrain$FDEAD)
 tanPerf <- performance(tanPred,"tpr","fpr")
 plot(tanPerf)
+
+## Linear Regression ##############
+
+lr <- glm(formula = FDEAD=="Y"  ~ .,
+          family=binomial(link="logit"),data = dataTrain, control = list(maxit = 100))
+
+lrPredictedProbabilities <- predict(lr, dataTrain, type="response")
+
+linPred <- prediction( lrPredictedProbabilities, dataTrain$FDEAD)
+linPerf <- performance(linPred,"tpr","fpr")
+plot(linPerf)
+
+
+plot( linPerf, col="blue")
+plot(tanPerf, add = TRUE, col="red")
+plot(bayesPerf, add = TRUE, col="green")
+legend(0.6,0.6,c("Linear Regression","Tree Augmented Naive Bayes","Bayes Network"),col=c("blue","red", "green"), lwd=5)
+
+
