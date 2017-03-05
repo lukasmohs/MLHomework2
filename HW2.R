@@ -6,8 +6,17 @@
 
 # Get dataset from: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_corrected.csv
 
-library(dplyr)
+library(vegan)
 library(survival)
+library(bnlearn)
+library(dplyr)
+library(ggplot2)
+library(lattice)
+library(mice)
+library(ROCR)
+library(tableone)
+library(caret)
+
 data <- read.csv("IST_corrected.csv")
 
 # synthetic depression data
@@ -144,7 +153,7 @@ MAP #[1] 0.375
 # including information on age, gender, systolic blood pressure, and conscious state.
 
 # install.packages("tableone")
-library(tableone)
+
 
 
 listVariables <- c("AGE", "SEX", "RSBP", "RCONSC")
@@ -176,24 +185,53 @@ percentDeadInTest # [1] 0.550319
 
 # Choose which variables to include in your model. For example, remove variables for outcomes at 14 days 
 # (because if you are dead at 14 days you are certainly dead at 6 months).
-data<- data[ -c(which( colnames(data)=="DASP14" ):which( colnames(data)=="DDEADX" )) ]
+# data<- data[ -c(which( colnames(data)=="DASP14" ):which( colnames(data)=="DDEADX" )) ]
 
 # Moreover, you should remove all features measured after baseline if you want to make 
 # a prediction based on baseline data
 
+dataTrain <- dataTrain[c(which( colnames(dataTrain)=="HOSPNUM") : which( colnames(dataTrain)=="RXHEP"), which( colnames(dataTrain)=="CNTRYNUM"), which( colnames(dataTrain)=="FDEAD"))]
+dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(dataTest)=="RXHEP"), which( colnames(dataTest)=="CNTRYNUM"), which( colnames(dataTest)=="FDEAD"))]
 
 
 # Similarly, specific indicators of the outcome should also be removed, 
 # since those are measurements past the baseline that are not our outcome of interest. 
 # For these reasons, you will need to remove clusters of variables. Justify your approach.
-data<- data[ -c(which( colnames(data)=="FLASTD" )) ] #remove: Date of last contact 
-data<- data[ -c(which( colnames(data)=="FDEADD" )) ] #remove: Date of death
-data<- data[ -c(which( colnames(data)=="FDEADC" )) ] #remove: Cause of death 
-data<- data[ -c(which( colnames(data)=="FDEADX" )) ] #remove: Comment on death
-data<- data[ -c(which( colnames(data)=="FRECOVER" )) ] #remove: Fully recovered at 6 month follow-up
 
-data<- data[ -c(which( colnames(data)=="ID" )) ] #remove: Indicator variable for death
-data<- data[ -c(which( colnames(data)=="TD" )) ] #remove: Time of death or censoring in days
-data<- data[ -c(which( colnames(data)=="EXPDD" ):which( colnames(data)=="ID14" )) ] # Predicted probability of XXX
-data<- data[ -c(which( colnames(data)=="DEAD1" ):ncol(data)) ] #remove: Indicator variables for specific causes of death
+#data<- data[ -c(which( colnames(data)=="FLASTD" )) ] #remove: Date of last contact 
+#data<- data[ -c(which( colnames(data)=="FDEADD" )) ] #remove: Date of death
+#data<- data[ -c(which( colnames(data)=="FDEADC" )) ] #remove: Cause of death 
+#data<- data[ -c(which( colnames(data)=="FDEADX" )) ] #remove: Comment on death
+#data<- data[ -c(which( colnames(data)=="FRECOVER" )) ] #remove: Fully recovered at 6 month follow-up
 
+#data<- data[ -c(which( colnames(data)=="ID" )) ] #remove: Indicator variable for death
+#data<- data[ -c(which( colnames(data)=="TD" )) ] #remove: Time of death or censoring in days
+#data<- data[ -c(which( colnames(data)=="EXPDD" ):which( colnames(data)=="ID14" )) ] # Predicted probability of XXX
+#data<- data[ -c(which( colnames(data)=="DEAD1" ):ncol(data)) ] #remove: Indicator variables for specific causes of death
+
+# Use the following machine learning algorithms: logistic regression, naive Bayes, Tree Augmented Naive Bayes, and decision tree 
+# (specify any parameters you set that are not the default). The packages that you may find useful here are: 'glm', 'bnlearn', and 'rpart', 
+# but you may use others if desired. In a table, report the accuracy with 95% confidence intervals for each algorithm.
+
+#NB
+
+bayesTrain <- dataTrain
+bayesTrain <- bayesTrain[bayesTrain$FDEAD != "U",]
+bayesTrain <- bayesTrain[bayesTrain$FDEAD != "",]
+bayesTrain <- bayesTrain[ ,sapply(dataTrain, is.factor)]
+bayesTrain <- droplevels(bayesTrain)
+
+bayesTest <- dataTest
+bayesTest <- bayesTest[bayesTest$FDEAD != "U",]
+bayesTest <- bayesTest[bayesTest$FDEAD != "",]
+bayesTest <- bayesTest[ ,sapply(bayesTest, is.factor)]
+bayesTest <- droplevels(bayesTest)
+
+nb = naive.bayes(bayesTrain, "FDEAD")
+fitted = bn.fit(nb, bayesTest)
+
+# res <- table(predict(fitted, bayesTest), bayesTest$FDEAD) 
+predictedProbabilities <- predicted=predict(fitted, bayesTest,"raw")
+pred <- prediction( predictedProbabilities, bayesTest$FDEAD)
+perf <- performance(pred,"tpr","fpr")
+plot(perf)
