@@ -1,4 +1,4 @@
-#INFO: This file contains the plain source code, answers can be found in the .rmd file
+#INFO: This file just contains the plain source code, answers and code can be found in the .rmd file
 
 # Homework 2 is about applying what you have learned in class into analysis in R. 
 # You will draw from both your learning in lecture and discussion with the skills 
@@ -134,12 +134,14 @@ dataTest <- mutate(dataTest,DOD=ifelse(OCCODE==1|OCCODE==2,1,0))
 #dataTest <- mutate(dataTest,DOD=ifelse(FDEAD=="Y"|FDENNIS=="Y",1,0))
 
 #What percent of patients are dead or dependent at 6 months in your train set and test set? 
-percentDeadInTrain <- sum(dataTrain$FDEAD=="Y" | dataTrain$FDENNIS=="Y")/nrow(dataTrain)
-# percentDeadInTrain <- sum(dataTrain$OCCODE==1 | dataTrain$OCCODE==2)/nrow(dataTrain) # [1] 0.6351755
-percentDeadInTrain # [1] 0.6336318
-percentDeadInTest <- sum(dataTest$FDEAD=="Y" | dataTrain$FDENNIS=="Y")/nrow(dataTest)
-#percentDeadInTest <- sum(dataTest$OCCODE==1 | dataTest$OCCODE==2)/nrow(dataTest) # [1] 0.6125746
-percentDeadInTest # [1] 0.550319
+percentDeadInTrain <- sum(dataTrain$OCCODE==1 | dataTrain$OCCODE==2)/nrow(dataTrain)
+#alternatively: percentDeadInTrain <- sum(dataTrain$FDEAD=="Y" | dataTrain$FDENNIS=="Y")/nrow(dataTrain)
+paste("Dead or dependent at 6 months in your train set: ",toString(percentDeadInTrain), "%")
+
+percentDeadInTest <- sum(dataTest$OCCODE==1 | dataTest$OCCODE==2)/nrow(dataTest)
+#alternatively: percentDeadInTest <- sum(dataTest$FDEAD=="Y" | dataTrain$FDENNIS=="Y")/nrow(dataTest)
+paste("Dead or dependent at 6 months in your test set: ", toString(percentDeadInTest), "%")
+
 
 # Choose which variables to include in your model. For example, remove variables for outcomes at 14 days 
 # (because if you are dead at 14 days you are certainly dead at 6 months).
@@ -148,29 +150,28 @@ percentDeadInTest # [1] 0.550319
 # Similarly, specific indicators of the outcome should also be removed, 
 # since those are measurements past the baseline that are not our outcome of interest. 
 # For these reasons, you will need to remove clusters of variables. Justify your approach.
-
-# First, just include the variables from sction: "Randomisation data" (according to: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf).
-# This includes all the information that were collected before Randomisation at the beginning of the study. 
-
-dataTrain <- dataTrain[c(which( colnames(dataTrain)=="HOSPNUM") : which( colnames(dataTrain)=="RXHEP"), which( colnames(dataTrain)=="CNTRYNUM"), which( colnames(dataTrain)=="DOD"))]
-dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(dataTest)=="RXHEP"), which( colnames(dataTest)=="CNTRYNUM"), which( colnames(dataTest)=="DOD"))]
-
 # Use the following machine learning algorithms: logistic regression, naive Bayes, Tree Augmented Naive Bayes, and decision tree 
 # (specify any parameters you set that are not the default). The packages that you may find useful here are: 'glm', 'bnlearn', and 'rpart', 
 # but you may use others if desired. In a table, report the accuracy with 95% confidence intervals for each algorithm.
-
+# Factor the binary outcome variable
+dataTrain <- dataTrain[c(which( colnames(dataTrain)=="HOSPNUM") : which( colnames(dataTrain)=="RXHEP"), which( colnames(dataTrain)=="CNTRYNUM"), which( colnames(dataTrain)=="DOD"), which( colnames(dataTest)=="OCCODE"), which( colnames(dataTest)=="DNOSTRK"))]
+dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(dataTest)=="RXHEP"), which( colnames(dataTest)=="CNTRYNUM"), which( colnames(dataTest)=="DOD"), which( colnames(dataTest)=="OCCODE"), which( colnames(dataTest)=="DNOSTRK"))]
+dataTrain <- dataTrain[dataTrain$OCCODE<8,]
+dataTest <- dataTest[dataTest$OCCODE<8,]
+dataTrain <- dataTrain[-c(which( colnames(dataTrain)=="OCCODE"))]
+dataTest <- dataTest[-c(which( colnames(dataTest)=="OCCODE"))]
+dataTrain <- dataTrain[dataTrain$DNOSTRK=="N",]
+dataTest <- dataTest[dataTest$DNOSTRK=="N",]
+dataTrain <- dataTrain[-c(which( colnames(dataTest)=="DNOSTRK"))]
+dataTest <- dataTest[-c(which( colnames(dataTest)=="DNOSTRK"))]
 dataTrain$DOD <- as.factor(dataTrain$DOD)
-
 dataTest$DOD <- as.factor(dataTest$DOD)
-
-
+tanTrain <- dataTrain[ ,sapply(dataTrain, is.factor)]
+tanTest <- dataTest[ ,sapply(dataTest, is.factor)]
 
 ############## Naive Bayes   ##############
 
-library(ROCR) 
-library(e1071)
 nb = naiveBayes(DOD~.,dataTrain)
-
 bayesAccuracy <- sum(predict(nb, dataTest)==dataTest$DOD) / nrow(dataTest)
 bayesPredictedProbabilities <- predict(nb, dataTest,"raw")
 bayesPred <- prediction( bayesPredictedProbabilities[,2], dataTest$DOD)
@@ -178,9 +179,6 @@ bayesPerfROC <- performance(bayesPred,"tpr","fpr")
 bayesPerfPR <- performance(bayesPred, "prec", "rec")
 
 ############## Tree Augmented NB ##############
-
-tanTrain <- dataTrain[ ,sapply(dataTrain, is.factor)]
-tanTest <- dataTest[ ,sapply(dataTest, is.factor)]
 
 tan = tree.bayes(tanTrain, "DOD")
 fittedTan = bn.fit(tan, tanTrain)
@@ -196,7 +194,7 @@ tanPerfPR <- performance(tanPred, "prec", "rec")
 lr <- glm(formula = DOD  ~ .,
           family=binomial(link="logit"),data = dataTrain, control = list(maxit = 100))
 lrAccuracy <- (sum(predict(lr, dataTest, type="response")>0.5 & dataTest$DOD==1) 
-                + sum(predict(lr, dataTest, type="response")<0.5 & dataTest$DOD==0) ) / nrow(dataTest)
+               + sum(predict(lr, dataTest, type="response")<0.5 & dataTest$DOD==0) ) / nrow(dataTest)
 
 lrPredictedProbabilities <- predict(lr, dataTest, type="response")
 linPred <- prediction( lrPredictedProbabilities, dataTest$DOD)
@@ -206,8 +204,8 @@ linPerfPR <- performance(linPred, "prec", "rec")
 ############## Decision Tree ##############
 
 tree <- rpart(DOD~ .,
-             data=dataTrain,
-             method="class")
+              data=dataTrain,
+              method="class")
 dtAccuracy <- (sum(predict(tree, dataTest, type="class")==dataTest$DOD)) / nrow(dataTest)
 dtPredictedProbabilities <- predict(tree, dataTest, type = "prob")
 dtPred <- prediction( dtPredictedProbabilities[,2], dataTest$DOD)
@@ -229,7 +227,6 @@ colnames(accuracyComparisonMatrix) <- c("Decision Tree","Logistic Regression", "
 rownames(accuracyComparisonMatrix) <- c("Accuracy")
 accuracyComparisonTable <- as.table(accuracyComparisonMatrix)
 accuracyComparisonTable
-
 ## Plotting ##############
 
 plot(linPerfROC, col="blue")
@@ -237,17 +234,21 @@ plot(tanPerfROC, add = TRUE, col="red")
 plot(bayesPerfROC, add = TRUE, col="green")
 plot(dtPerfROC, add = TRUE, col="violet")
 title(main="ROC Comparison of different Classifiers")
-legend(0.6,0.4,c("Logistic Regression","Tree Augmented Naive Bayes","Bayes Network","Decision Tree"),
-       col=c("blue","red", "green","violet"), lwd=5, y.intersp = 0.4)
+legend("bottom",c("Logistic Regression","Tree Augmented Naive Bayes","Bayes Network","Decision Tree"),
+       col=c("blue","red", "green","violet"), lwd=3, y.intersp = 1.0)
 
 plot(linPerfPR, col="blue")
-legend(0.6,0.9,c("Logistic Regression"),col=c("blue"), lwd=5)
+title(main="Precision/Recall Curve of Logistic Regression")
+legend("bottom",c("Logistic Regression"),col=c("blue"), lwd=5)
 plot(tanPerfPR, col="red")
-legend(0.6,0.9,c("Tree Augmented Naive Bayes"),col=c("red"), lwd=5)
+title(main="Precision/Recall Curve of Tree Augmented Naive Bayes")
+legend("bottom",c("Tree Augmented Naive Bayes"),col=c("red"), lwd=5)
 plot(bayesPerfPR, col="green")
-legend(0.6,0.9,c("Bayes Network"),col=c("green"), lwd=5)
+title(main="Precision/Recall Curve of Bayes Network")
+legend("bottom",c("Bayes Network"),col=c("green"), lwd=5)
 plot(dtPerfPR, col="violet")
-legend(0.6,0.8,c("Decision Tree"),col=c("violet"), lwd=5)
+title(main="Precision/Recall Curve of Decision Tree")
+legend("bottom",c("Decision Tree"),col=c("violet"), lwd=5)
 
 #how well are we able to predict death or dependence at 6 months? [response required]
 #what is the average treatment effect of aspirin on death or dependence at 6 months? Is aspirin significantly better than the alternative? [response required]
@@ -256,5 +257,3 @@ aspirinATE <- ((sum(data$DOD==1&data$RXASP=="N")/sum(data$RXASP=="N"))-(sum(data
 paste("Aspirin ATE: ", toString(aspirinATE),"%")
 heparinATE <-((sum(data$DOD==1&data$RXHEP=="N")/sum(data$RXHEP=="N"))-(sum(data$DOD==1&data$RXHEP!="N")/sum(data$RXHEP!="N"))) * 100
 paste("Heparin ATE: ",toString(heparinATE), "%")
-paste("Probability of randomly drawing this or an even more extrem sample: ",pbinom(sum(data$DOD==1&data$RXASP=="Y"), size=sum(data$DOD), prob=(sum(data$DOD==1&data$RXHEP!="N")/sum(data$DOD))),"%")
-#of the algorithms tested, which algorithms perform the best? Justify your statement. [response required]

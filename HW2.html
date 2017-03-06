@@ -121,9 +121,8 @@ $(document).ready(function () {
 
 <div id="homework-2" class="section level1">
 <h1>Homework 2</h1>
-<div id="part-1-concept-questions-6-points" class="section level2">
-<h2>Part 1: Concept questions (6 points)</h2>
-<p>The code that follows introduces a toy data set, decision tree model, and two prediction functions.</p>
+<div id="part-1-concept-questions" class="section level2">
+<h2>Part 1: Concept questions</h2>
 <pre class="r"><code>#import libraries
 library(vegan)
 library(survival)
@@ -246,14 +245,29 @@ MAP</code></pre>
 <li><strong>Y:</strong> What was the definition of the primary outcome in this study?</li>
 <li>What is (are) the variable name(s) for the outcome?</li>
 </ul>
-<p><em>The two primary outcomes were ‘death within 14 days’ and ‘death, dependency, and incomplete recovery’ at 6 months. Meanwhule the protocol just specified the latter one as ‘death or dependency (ie, needing help from another person with daily activities) at 6 months’.</em> <em>For the first study outcome after 14 days, the ‘DDEAD’ variables indicates wehther a patient was ‘Dead on discharge form’.</em> <em>For the study outcome after six month, ‘FDEAD’ indicates if the patient was ‘Dead at six month follow-up’. The variable ‘FDENNIS’ states whether the patient was ‘Dependent at six month follow-up’ and ‘FRECOVER’ finally describes if the individual was ‘Fully recovered at six month follow-up’. All of these variables are set to either false (‘F’) or true (‘T’).</em> <em>The variable ‘OCCODE’ furthermore describes the study outcome after six month in moire granular way by providing 5 potential values: 1:dead, 2:dependent, 3:not recovered, 4:recovered, 8 or 9: missing status.</em></p>
+<p><em>The two primary outcomes were ‘death within 14 days’ and ‘death, dependency, and incomplete recovery’ at 6 months. Meanwhule the protocol just specified the latter one as ‘death or dependency (ie, needing help from another person with daily activities) at 6 months’.</em> <em>For the first study outcome after 14 days, the ‘DDEAD’ variables indicates wehther a patient was ‘Dead on discharge form’.</em> <em>For the study outcome after six month, ‘FDEAD’ indicates if the patient was ‘Dead at six month follow-up’. The variable ‘FDENNIS’ states whether the patient was ‘Dependent at six month follow-up’ and ‘FRECOVER’ finally describes if the individual was ‘Fully recovered at six month follow-up’. All of these variables are set to either false (‘F’) or true (‘T’).</em> <em>The variable ‘OCCODE’ furthermore describes the study outcome after six month in more granular way by providing five potential values: 1:dead, 2:dependent, 3:not recovered, 4:recovered, 8 or 9: missing status.</em></p>
 <ul>
-<li><strong>U:</strong> what is (are) the variable name(s) for the intervention, and what is (are) their possible values?</li>
+<li><strong>U:</strong> what is (are) the variable name(s) for the intervention, and what is (are) their possible values? <em>The two main variables that are describing the intervention are the following:</em> <em>‘RXASP’, which indicates whther aspirin was allocated by either stating true (‘Y’) or false (‘N’) and</em> <em>‘RXHEP’ that states if heparin was allocated based on four levels: high (H), medium (M), low(L) and none(N)</em></li>
 </ul>
-<p><em>DASP14 Aspirin given for 14 days or till death or discharge (Y/N) </em> <em>DLH14 Low dose heparin given for 14 days or till death/discharge (Y/N) </em> <em>DMH14 Medium dose heparin given for 14 days or till death/discharge (Y/N) </em> <em>DHH14 Medium dose heparin given for 14 days etc in pilot (combine with above) </em> <em>DOAC Other anticoagulants (Y/N) </em> <em>DGORM Glycerol or manitol (Y/N)</em> <em>DSTER Steroids (Y/N)</em> <em>DCAA Calcium antagonists (Y/N)</em> <em>DHAEMD Haemodilution (Y/N)</em> <em>DCAREND Carotid surgery (Y/N)</em> <em>DTHROMB Thrombolysis (Y/N)</em> <em>DMAJNCH Major non-cerebral haemorrhage (Y/N)</em></p>
+<p><em>Besides these two variables, the following columns highlight several non-trial treatments that were undertaken in the hospital:</em></p>
+<p><em>‘DASP14’: Aspirin given for 14 days or till death or discharge (Y/N) </em></p>
+<p><em>‘DLH14’: Low dose heparin given for 14 days or till death/discharge (Y/N) </em></p>
+<p><em>‘DMH14’: Medium dose heparin given for 14 days or till death/discharge (Y/N) </em></p>
+<p><em>‘DHH14’: Medium dose heparin given for 14 days etc in pilot (combine with above) </em></p>
+<p><em>‘DOAC’: Other anticoagulants (Y/N) </em></p>
+<p><em>‘DGORM’: Glycerol or manitol (Y/N)</em></p>
+<p><em>‘DSTER’: Steroids (Y/N)</em></p>
+<p><em>‘DCAA’: Calcium antagonists (Y/N)</em></p>
+<p><em>‘DHAEMD’: Haemodilution (Y/N)</em></p>
+<p><em>‘DCAREND’: Carotid surgery (Y/N)</em></p>
+<p><em>‘DTHROMB’: Thrombolysis (Y/N)</em></p>
+<p><em>‘DMAJNCH’: Major non-cerebral haemorrhage (Y/N)</em></p>
 <ul>
-<li><p><strong>V, W:</strong> describe the covariates included and the population being studied.</p></li>
-<li><p>Construct a so-called Table 1 for groups of {aspirin, no aspirin} use, including information on age, gender, systolic blood pressure, and conscious state.</p></li>
+<li><strong>V, W:</strong> describe the covariates included and the population being studied. <em>The covariats of the study that were measured during the initial visit of the individual at the hospital include the following:</em> <em>Each hospital was assigned a number within the column ‘HOSPNUM’. ‘RDELAY’ states the delay between the onset of the stroke and the randomisation. The conscious level of the individual was observed (‘RCONSC’). Gender (‘SEX’) and age (‘AGE’) was storead as well as the syntoms noted on waking (‘RSLEEP’). Atrial fibrillation (‘RATRIAL’), the potential use of CT before randomisation (‘RCT’) and the visibility of the infarct on the CT (‘RVISINF’) was captured. The intake of both study drugs aspirin and heparin 48 hours before randomising was documented as ‘RHEP24’ ans ‘RASP3’. ‘RSBP’ indicates Systolic blood pressure at randomisation. Then the varibales from ‘RDEF1’ to ‘RDEF8’ identify different deficit at the body of the individual.Finally, several time measurements state at what time the randomisation was realized(‘RDATE’, ‘HOURLOCAL’, ‘MINLOCAL’, ‘DAYLOCAL’)</em></li>
+</ul>
+<p><em>A patient was eligible for the study, if a physician identified an acute stroke, where the severity was not taken into account, but the onset must have been less than 48 hours previously. Further, there should be no evidence about intracranial haemorrhage and no clear indications for heparin or aspirin and neither contraindications to heparin or aspirin.In total, 19 435 patients were observed, which were between 16 and 99 years old with an average of 71.72 years. 46% of the population was female and 54% male. The delay of the stroke and the randomization was between one and 48 hours with a mean of 20.12 hours. 71% of the patients were awake during the onset, the other 29% were sleeping. The conscious level of the patients was mostly alert (77%), 22% were classified as drowsy and 1% was without consciousness. </em></p>
+<ul>
+<li>Construct a so-called Table 1 for groups of {aspirin, no aspirin} use, including information on age, gender, systolic blood pressure, and conscious state.</li>
 </ul>
 <pre class="r"><code># Get dataset from: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_corrected.csv
 
@@ -292,21 +306,21 @@ paste(&quot;Dead or dependent at 6 months in your train set: &quot;,toString(per
 paste(&quot;Dead or dependent at 6 months in your test set: &quot;, toString(percentDeadInTest), &quot;%&quot;)</code></pre>
 <pre><code>## [1] &quot;Dead or dependent at 6 months in your test set:  0.624369661418133 %&quot;</code></pre>
 <p>Choose which variables to include in your model. For example, remove variables for outcomes at 14 days (because if you are dead at 14 days you are certainly dead at 6 months). Moreover, you should remove all features measured after baseline if you want to make a prediction based on baseline data. Similarly, specific indicators of the outcome should also be removed, since those are measurements past the baseline that are not our outcome of interest. For these reasons, you will need to remove clusters of variables. Justify your approach.</p>
-<p><em>First, just include the variables from sction: “Randomisation data” (according to: <a href="http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf" class="uri">http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf</a>). This excludes all the information that were not collected before Randomisation at the beginning of the study. Afterwards, only the country code (“CNTRYNUM”) is added as a variable to the train and test data set. Finally, the dummy variable “DOD” is kept for training and test data as a label.</em> <em>All other varibles basically contained study results after 14 days or indicated or diagnose variables, which should be excluded.</em></p>
+<p><em>First, just the variables from the section “Randomisation data” (according to: <a href="http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf" class="uri">http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf</a>) where included. This excludes all the information that were not collected before Randomisation at the beginning of the study. Afterwards, only the country code (“CNTRYNUM”) is added as well as ‘OCCODE’ and ‘DNOSTRK’ columns, which are used for cleaning and described later. Finally, the dummy variable “DOD” is kept for training and testing data as a label.</em> <em>All other excluded varibles basically contained study results after 14 days or indicated or diagnosed variables, which was not part of the scope.</em></p>
 <pre class="r"><code>dataTrain &lt;- dataTrain[c(which( colnames(dataTrain)==&quot;HOSPNUM&quot;) : which( colnames(dataTrain)==&quot;RXHEP&quot;), which( colnames(dataTrain)==&quot;CNTRYNUM&quot;), which( colnames(dataTrain)==&quot;DOD&quot;), which( colnames(dataTest)==&quot;OCCODE&quot;), which( colnames(dataTest)==&quot;DNOSTRK&quot;))]
 dataTest &lt;- dataTest[c(which( colnames(dataTest)==&quot;HOSPNUM&quot;) : which( colnames(dataTest)==&quot;RXHEP&quot;), which( colnames(dataTest)==&quot;CNTRYNUM&quot;), which( colnames(dataTest)==&quot;DOD&quot;), which( colnames(dataTest)==&quot;OCCODE&quot;), which( colnames(dataTest)==&quot;DNOSTRK&quot;))]</code></pre>
 <p>Of the remaining variables, decide whether to exclude variables with missing data, impute them, and/or use indicator variables. (Note that if you choose multiple imputation for some variables, you would need to pool the results when evaluating performance, however for homework you may just use the first imputed data set). Justify your approach.</p>
-<p><em>To remove individuals with unknown outcome after six month, the ‘OCCODE’ variable is analyzed and rows removed, where no outcome of the study was not docmented</em></p>
+<p><em>To remove individuals with unknown outcome after six month, the ‘OCCODE’ variable is analyzed and rows removed, where no outcome of the study was not documented</em></p>
 <pre class="r"><code>dataTrain &lt;- dataTrain[dataTrain$OCCODE&lt;8,]
 dataTest &lt;- dataTest[dataTest$OCCODE&lt;8,]
 dataTrain &lt;- dataTrain[-c(which( colnames(dataTrain)==&quot;OCCODE&quot;))]
 dataTest &lt;- dataTest[-c(which( colnames(dataTest)==&quot;OCCODE&quot;))]</code></pre>
-<p><em>Furthermore, specific cases were discovered, where individuals’ initial event was not a stroke, where causes noise within the training and test data. Therefore, these instances were removed, too.</em></p>
+<p><em>Furthermore, specific cases were discovered, where individuals’ initial event was not a stroke. The variable ‘DNOSTRK’ identifies these individuals with the value ‘Y’. Since these rows might cause noise within the training and test data set, the corresponding instances were removed, too.</em></p>
 <pre class="r"><code>dataTrain &lt;- dataTrain[dataTrain$DNOSTRK==&quot;N&quot;,]
 dataTest &lt;- dataTest[dataTest$DNOSTRK==&quot;N&quot;,]
 dataTrain &lt;- dataTrain[-c(which( colnames(dataTest)==&quot;DNOSTRK&quot;))]
 dataTest &lt;- dataTest[-c(which( colnames(dataTest)==&quot;DNOSTRK&quot;))]</code></pre>
-<p><em>The provided variables have not been modified further except for changing the dummy variable to a factor. Besides that, the Tree Augmented Naive Bayes requires all variables to be a factor, therefore all non-factor variables were dropped for this algorithm. This approach was chosen due to the fact that factoring vairbles like the hospital number “HOSPNUM” would create 452 levels, which result in unequal levels in test and training data.</em></p>
+<p><em>The provided variables have not been modified further except for changing the dummy variable to a factor. Besides that, the Tree Augmented Naive Bayes requires all variables to be a factor, therefore all non-factor variables were dropped for this algorithm. This approach was chosen due to the fact that factoring variables like the hospital number “HOSPNUM” would create 452 levels, which result in unequal levels in test and training data.</em></p>
 <pre class="r"><code># Factor the binary outcome variable
 dataTrain$DOD &lt;- as.factor(dataTrain$DOD)
 dataTest$DOD &lt;- as.factor(dataTest$DOD)
@@ -382,10 +396,10 @@ accuracyComparisonTable</code></pre>
 ##          Logistic Regression                 
 ## Accuracy 0.728011514844324; 0.745761750807114
 ##          Tree Augmented Naive Bayes          
-## Accuracy 0.688821864941957; 0.707328727274625
+## Accuracy 0.688928537848837; 0.707433560289911
 ##          Naive Bayes                         
 ## Accuracy 0.693516026293286; 0.711940826498593</code></pre>
-<p>Construct an ROC (receiver operating characteristic) curve for each model and overlay them on a graph using ggplot. Include a legend. Hint: you will find the package “ROCR” helpful (or you might try the package “precrec”, but I have not tested it).</p>
+<p>Construct an ROC (receiver operating characteristic) curve for each model and overlay them on a graph using ggplot. Include a legend.</p>
 <pre class="r"><code>plot(linPerfROC, col=&quot;blue&quot;)
 plot(tanPerfROC, add = TRUE, col=&quot;red&quot;)
 plot(bayesPerfROC, add = TRUE, col=&quot;green&quot;)
@@ -415,7 +429,7 @@ legend(&quot;bottom&quot;,c(&quot;Decision Tree&quot;),col=c(&quot;violet&quot;)
 <div id="conclusions" class="section level4">
 <h4>Conclusions</h4>
 <p>Let’s draw conclusions from this study. Specifically, - how well are we able to predict death or dependence at 6 months?</p>
-<p><em>Due to the low accuracies of the applied algoirthms (below 0.8), one can state that we could not build a conclusive model. Comparing the different algorithms, identifies the Decision Tree and the Logisitc Regression to perform slightly better. However, the error rate of all models outlines the lack of significance. </em></p>
+<p><em>Due to the low accuracies of the applied algoirthms (all below 0.75), one can state that we could not build a conclusive model. Comparing the different algorithms, identifies the Decision Tree and the Logisitc Regression to perform slightly better. However, the error rate of all models outlines the lack of significance. </em></p>
 <ul>
 <li>what is the average treatment effect of aspirin on death or dependence at 6 months? - Is aspirin significantly better than the alternative?</li>
 </ul>
@@ -426,13 +440,11 @@ paste(&quot;Aspirin ATE: &quot;, toString(aspirinATE),&quot;%&quot;)</code></pre
 <pre class="r"><code>heparinATE &lt;-((sum(data$DOD==1&amp;data$RXHEP==&quot;N&quot;)/sum(data$RXHEP==&quot;N&quot;))-(sum(data$DOD==1&amp;data$RXHEP!=&quot;N&quot;)/sum(data$RXHEP!=&quot;N&quot;))) * 100
 paste(&quot;Heparin ATE: &quot;,toString(heparinATE), &quot;%&quot;)</code></pre>
 <pre><code>## [1] &quot;Heparin ATE:  -0.0167108253934178 %&quot;</code></pre>
-<pre class="r"><code>paste(&quot;Probability of randomly drawing this or an even more extrem sample: &quot;,pbinom(sum(data$DOD==1&amp;data$RXASP==&quot;Y&quot;), size=sum(data$DOD), prob=(sum(data$DOD==1&amp;data$RXHEP!=&quot;N&quot;)/sum(data$DOD))),&quot;%&quot;)</code></pre>
-<pre><code>## [1] &quot;Probability of randomly drawing this or an even more extrem sample:  0.128147083001155 %&quot;</code></pre>
-<p><em>From this small Average Treatment Effect of Aspirin (1.3%) compared to 0.0% of Heparin, we can conclude that Aspirin is not significantally decreading the outcome of death or dependence at 6 month.</em></p>
+<p><em>From this small Average Treatment Effect of Aspirin (1.3%) compared to 0.0% of Heparin, we can conclude that Aspirin is not significantally decreadsing the outcome of death or dependence at six month.</em></p>
 <ul>
 <li>of the algorithms tested, which algorithms perform the best? Justify your statement.</li>
 </ul>
-<p><em>Considering the results of each classifier on the test set, which where presented above, we can conclude that the Logistic Regression as well as the Decision Treee perform better than the other two classifiers given a higher accuracy.</em></p>
+<p><em>Considering the results of each classifier on the test set, which where presented above, we can conclude that the Logistic Regression as well as the Decision Treee perform better than the other two classifiers considering a higher accuracy. Additionally, we can use the plotted graphs to analyze the ‘True Positive Rate’ with the ‘False Positive Rate’ in the ROC curve. The ROC curve focuses on the prediction of true outcome values, which is ‘dead or dependent’ in this case. Comparing the graphs of the different classifiers, shows that the Logistic Regression performs best again, but the Bayes Network is second. </em></p>
 </div>
 </div>
 </div>

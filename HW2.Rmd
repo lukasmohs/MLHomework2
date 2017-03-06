@@ -1,8 +1,7 @@
 # Homework 2
   
-## Part 1: Concept questions (6 points)
+## Part 1: Concept questions
 
-The code that follows introduces a toy data set, decision tree model, and two prediction functions.
 ```{r eval=T, message=F}
 #import libraries
 library(vegan)
@@ -136,31 +135,46 @@ MAP
 *The two primary outcomes were  'death within 14 days' and 'death, dependency, and incomplete recovery' at 6 months. Meanwhule the protocol just specified the latter one as 'death or dependency (ie, needing help from another person with daily activities) at 6 months'.*
 *For the first study outcome after 14 days, the 'DDEAD' variables indicates wehther a patient was 'Dead on discharge form'.*
 *For the study outcome after six month, 'FDEAD' indicates if the patient was 'Dead at six month follow-up'. The variable 'FDENNIS' states whether the patient was 'Dependent at six month follow-up' and 'FRECOVER' finally describes if the individual was 'Fully recovered at six month follow-up'. All of these variables are set to either false ('F') or true ('T').*
-*The variable 'OCCODE' furthermore describes the study outcome after six month in moire granular way by providing 5 potential values: 1:dead, 2:dependent, 3:not recovered, 4:recovered, 8 or 9: missing status.*
+*The variable 'OCCODE' furthermore describes the study outcome after six month in more granular way by providing five potential values: 1:dead, 2:dependent, 3:not recovered, 4:recovered, 8 or 9: missing status.*
 
 - **U:** what is (are) the variable name(s) for the intervention, and what is (are) their possible values?
+
 *The two main variables that are describing the intervention are the following:*
 *'RXASP', which indicates whther aspirin was allocated by either stating true ('Y') or false ('N') and*
 *'RXHEP' that states if heparin was allocated based on four levels: high (H), medium (M), low(L) and none(N)*
 
 *Besides these two variables, the following columns highlight several non-trial treatments that were undertaken in the hospital:*
+
 *'DASP14': Aspirin given for 14 days or till death or discharge (Y/N) *
+
 *'DLH14': Low dose heparin given for 14 days or till death/discharge (Y/N) *
+
 *'DMH14': Medium dose heparin given for 14 days or till death/discharge (Y/N) *
+
 *'DHH14': Medium dose heparin given for 14 days etc in pilot (combine with above) *
+
 *'DOAC': Other anticoagulants (Y/N) *
+
 *'DGORM': Glycerol or manitol (Y/N)*
+
 *'DSTER': Steroids (Y/N)*
+
 *'DCAA': Calcium antagonists (Y/N)*
+
 *'DHAEMD': Haemodilution (Y/N)*
+
 *'DCAREND': Carotid surgery (Y/N)*
+
 *'DTHROMB': Thrombolysis (Y/N)*
+
 *'DMAJNCH': Major non-cerebral haemorrhage (Y/N)*
 
 
 - **V, W:** describe the covariates included and the population being studied.
+
 *The covariats of the study that were measured during the initial visit of the individual at the hospital include the following:*
-*Each hospital was assigned a number within the column 'HOSPNUM'. 'RDELAY' states the delay between the onset of the stroke and the randomisation. The conscious level of the individual was observed ('RCONSC'). Gender ('SEX') and age ('AGE') was storead as well as the syntoms noted on waking ('RSLEEP'). Atrial fibrillation ('RATRIAL'), the potential use of CT before randomisation ('RCT') and the visibility of the infarct on the CT ('RVISINF') was captured. The intake of both study drugs aspirin and heparin 48 hours before randomising was documented as 'RHEP24' ans 'RASP3'. 'RSBP' indicates Systolic blood pressure at randomisation. Then the varibales from 'RDEF1' to 'RDEF8' identify different deficit at the body of the individual.Finally, several time measurements state at what time the randomisation was realized
+*Each hospital was assigned a number within the column 'HOSPNUM'. 'RDELAY' states the delay between the onset of the stroke and the randomisation. The conscious level of the individual was observed ('RCONSC'). Gender ('SEX') and age ('AGE') was stored as well as the syntoms noted on waking ('RSLEEP'). Atrial fibrillation ('RATRIAL'), the potential use of CT before randomisation ('RCT') and the visibility of the infarct on the CT ('RVISINF') was captured. The intake of both study drugs aspirin and heparin 48 hours before randomising was documented as 'RHEP24' and 'RASP3'. 'RSBP' indicates Systolic blood pressure at randomisation. Then the varibales from 'RDEF1' to 'RDEF8' identify different deficit at the body of the individual. Additionally, several time measurements state at what time the randomisation was realized('RDATE', 'HOURLOCAL', 'MINLOCAL', 'DAYLOCAL'). Finally, several further attributes describe the 14 day study period at the hospital, some additional indicators and computed probabilities.*
+
 
 *A patient was eligible for the study, if a physician identified an acute stroke, where the severity was not taken into account, but the onset must have been less than 48 hours previously. Further, there should be no evidence about intracranial haemorrhage and no clear indications for heparin or aspirin and neither contraindications to heparin or aspirin.In total, 19 435 patients were observed, which were between 16 and 99 years old with an average of 71.72 years. 46% of the population was female and 54% male. The delay of the stroke and the randomization was between one and 48 hours with a mean of 20.12 hours. 71% of the patients were awake during the onset, the other 29% were sleeping. The conscious level of the patients was mostly alert (77%), 22% were classified as drowsy and 1% was without consciousness. *
 
@@ -334,7 +348,7 @@ legend("bottom",c("Decision Tree"),col=c("violet"), lwd=5)
 Let's draw conclusions from this study. Specifically,
 - how well are we able to predict death or dependence at 6 months? 
 
-*Due to the low accuracies of the applied algoirthms (all below 0.75), one can state that we could not build a conclusive model. Comparing the different algorithms, identifies the Decision Tree and the Logisitc Regression to perform slightly better. However, the error rate of all models outlines the lack of significance. *
+*Due to the low accuracies of the applied algoirthms (all below 0.75), one can state that one could not build a conclusive model. Comparing the different algorithms, identifies the Decision Tree and the Logisitc Regression to perform slightly better the Naive Bayes and Tree Augmented Naive Bayes. However, the error rate of all models outlines the lack of significance. *
 
 - what is the average treatment effect of aspirin on death or dependence at 6 months? - Is aspirin significantly better than the alternative? 
 ```{r eval=T, message=T}
@@ -344,8 +358,8 @@ paste("Aspirin ATE: ", toString(aspirinATE),"%")
 heparinATE <-((sum(data$DOD==1&data$RXHEP=="N")/sum(data$RXHEP=="N"))-(sum(data$DOD==1&data$RXHEP!="N")/sum(data$RXHEP!="N"))) * 100
 paste("Heparin ATE: ",toString(heparinATE), "%")
 ```
-*From this small Average Treatment Effect of Aspirin (1.3%) compared to 0.0% of Heparin, we can conclude that Aspirin is not significantally decreadsing the outcome of death or dependence at six month.*
+*From this small Average Treatment Effect of Aspirin of 1.3% (which is also descibed in the paper) compared to 0.0% of Heparin, one can conclude that Aspirin is not significantally decreasing the outcome of death or dependence at six month.*
 
 - of the algorithms tested, which algorithms perform the best? Justify your statement.
 
-*Considering the results of each classifier on the test set, which where presented above, we can conclude that the Logistic Regression as well as the Decision Treee perform better than the other two classifiers considering a higher accuracy. Additionally, we can use the plotted graphs to analyze the 'True Positive Rate' with the 'False Positive Rate' in the ROC curve. The ROC curve focuses  on the prediction of true outcome values, which is 'dead or dependent' in this case. Comparing the graphs of the different classifiers, shows that the Logistic Regression performs best again, but the Bayes Network is second.  *
+*Considering the results of each classifier on the test set, which where presented above, we can conclude that the Logistic Regression as well as the Decision Tree perform better than the other two classifiers considering a higher accuracy. Additionally, we can use the plotted graphs to analyze the 'True Positive Rate' with the 'False Positive Rate' in the ROC curve. The ROC curve focuses  on the prediction of true outcome values, which is 'dead or dependent' in this case. Comparing the graphs of the different classifiers, shows that the Logistic Regression performs best again, but the Bayes Network is second.  *
