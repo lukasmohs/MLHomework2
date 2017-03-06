@@ -133,18 +133,12 @@ MAP
 - **Y:** What was the definition of the primary outcome in this study?
 - What is (are) the variable name(s) for the outcome?
 
-*Two primary outcomes were  'death within 14 days' and 'death, dependency, and incomplete recovery' at 6 months. Meanwhule the protocol just specified them as: *
-*(a)'death from any cause within 14 days'and*
-*(b) 'death or dependency (ie, needing help from another person with daily activities) at 6 months'*
+*The two primary outcomes were  'death within 14 days' and 'death, dependency, and incomplete recovery' at 6 months. Meanwhule the protocol just specified the latter one as 'death or dependency (ie, needing help from another person with daily activities) at 6 months'.*
+*For the first study outcome after 14 days, the 'DDEAD' variables indicates wehther a patient was 'Dead on discharge form'.*
+*For the study outcome after six month, 'FDEAD' indicates if the patient was 'Dead at six month follow-up'. The variable 'FDENNIS' states whether the patient was 'Dependent at six month follow-up' and 'FRECOVER' finally describes if the individual was 'Fully recovered at six month follow-up'. All of these variables are set to either false ('F') or true ('T').*
+*The variable 'OCCODE' furthermore describes the study outcome after six month in moire granular way by providing 5 potential values: 1:dead, 2:dependent, 3:not recovered, 4:recovered, 8 or 9: missing status.*
 
 - **U:** what is (are) the variable name(s) for the intervention, and what is (are) their possible values?
-
-*For both of the first study outcomes, the variables are called: *
-*'DDEAD' and described as 'Dead on discharge form' and*
-*'FDEAD', which is described as 'Dead at six month follow-up (Y/N)'*
-*The variable 'OCCODE' also described the study outcome in moire granular way*
-
-- **V, W:** describe the covariates included and the population being studied.
 
 *DASP14 Aspirin given for 14 days or till death or discharge (Y/N) *
 *DLH14 Low dose heparin given for 14 days or till death/discharge (Y/N) *
@@ -158,6 +152,11 @@ MAP
 *DCAREND Carotid surgery (Y/N)*
 *DTHROMB Thrombolysis (Y/N)*
 *DMAJNCH Major non-cerebral haemorrhage (Y/N)*
+
+
+- **V, W:** describe the covariates included and the population being studied.
+
+
 
 
 - Construct a so-called Table 1 for groups of {aspirin, no aspirin} use, including information on age, gender, systolic blood pressure, and conscious state.
@@ -202,11 +201,27 @@ Choose which variables to include in your model. For example, remove variables f
 *First, just include the variables from sction: "Randomisation data" (according to: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf). This excludes all the information that were not collected before Randomisation at the beginning of the study. Afterwards, only the country code ("CNTRYNUM") is added as a variable to the train and test data set. Finally, the dummy variable "DOD" is kept for training and test data as a label.*
 *All other varibles basically contained study results after 14 days or indicated or diagnose variables, which should be excluded.*
 ```{r eval=T, message=F}
-dataTrain <- dataTrain[c(which( colnames(dataTrain)=="HOSPNUM") : which( colnames(dataTrain)=="RXHEP"), which( colnames(dataTrain)=="CNTRYNUM"), which( colnames(dataTrain)=="DOD"))]
-dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(dataTest)=="RXHEP"), which( colnames(dataTest)=="CNTRYNUM"), which( colnames(dataTest)=="DOD"))]
+dataTrain <- dataTrain[c(which( colnames(dataTrain)=="HOSPNUM") : which( colnames(dataTrain)=="RXHEP"), which( colnames(dataTrain)=="CNTRYNUM"), which( colnames(dataTrain)=="DOD"), which( colnames(dataTest)=="OCCODE"), which( colnames(dataTest)=="DNOSTRK"))]
+dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(dataTest)=="RXHEP"), which( colnames(dataTest)=="CNTRYNUM"), which( colnames(dataTest)=="DOD"), which( colnames(dataTest)=="OCCODE"), which( colnames(dataTest)=="DNOSTRK"))]
 ```
 
 Of the remaining variables, decide whether to exclude variables with missing data, impute them, and/or use indicator variables. (Note that if you choose multiple imputation for some variables, you would need to pool the results when evaluating performance, however for homework you may just use the first imputed data set). Justify your approach.
+
+*To remove individuals with unknown outcome after six month, the 'OCCODE' variable is analyzed and rows removed, where no outcome of the study was not docmented*
+```{r eval=T, message=F}
+dataTrain <- dataTrain[dataTrain$OCCODE<8,]
+dataTest <- dataTest[dataTest$OCCODE<8,]
+dataTrain <- dataTrain[-c(which( colnames(dataTrain)=="OCCODE"))]
+dataTest <- dataTest[-c(which( colnames(dataTest)=="OCCODE"))]
+```
+*Furthermore, specific cases were discovered, where individuals' initial event was not a stroke, where causes noise within the training and test data. Therefore, these instances were removed, too.*
+
+```{r eval=T, message=F}
+dataTrain <- dataTrain[dataTrain$DNOSTRK=="N",]
+dataTest <- dataTest[dataTest$DNOSTRK=="N",]
+dataTrain <- dataTrain[-c(which( colnames(dataTest)=="DNOSTRK"))]
+dataTest <- dataTest[-c(which( colnames(dataTest)=="DNOSTRK"))]
+```
 
 *The provided variables have not been modified further except for changing the dummy variable to a factor. Besides that, the Tree Augmented Naive Bayes requires all variables to be a factor, therefore all non-factor variables were dropped for this algorithm. This approach was chosen due to the fact that factoring vairbles like the hospital number "HOSPNUM" would create 452 levels, which result in unequal levels in test and training data.*
 ```{r eval=T, message=T}
@@ -231,8 +246,6 @@ bayesPerfROC <- performance(bayesPred,"tpr","fpr")
 bayesPerfPR <- performance(bayesPred, "prec", "rec")
 
 ############## Tree Augmented NB ##############
-
-
 
 tan = tree.bayes(tanTrain, "DOD")
 fittedTan = bn.fit(tan, tanTrain)
