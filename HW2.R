@@ -234,7 +234,7 @@ tanPred <- prediction( tanPredictedProbabilities[2], tanTest$DOD)
 tanPerfROC <- performance(tanPred,"tpr","fpr")
 tanPerfPR <- performance(tanPred, "prec", "rec")
 
-############## Linear Regression ##############
+############## Logistic Regression ##############
 
 lr <- glm(formula = DOD  ~ .,
           family=binomial(link="logit"),data = dataTrain, control = list(maxit = 100))
@@ -268,7 +268,7 @@ tanAccuracyInCI <- paste(toString(tanAccuracy-1.96*sqrt(tanAccuracy*(1-tanAccura
 bayesAccuracyInCI <- paste(toString(bayesAccuracy-1.96*sqrt(bayesAccuracy*(1-bayesAccuracy)/n)),
                            toString(bayesAccuracy+1.96*sqrt(bayesAccuracy*(1-bayesAccuracy)/n)), sep="; ")
 accuracyComparisonMatrix <- matrix(c(dtAccuracyInCI,lrAccuracyInCI,tanAccuracyInCI,bayesAccuracyInCI),ncol=4,byrow=TRUE)
-colnames(accuracyComparisonMatrix) <- c("Decision Tree","Linear Regression", "Tree Augmented Naive Bayes", "Naive Bayes")
+colnames(accuracyComparisonMatrix) <- c("Decision Tree","Logistic Regression", "Tree Augmented Naive Bayes", "Naive Bayes")
 rownames(accuracyComparisonMatrix) <- c("Accuracy")
 accuracyComparisonTable <- as.table(accuracyComparisonMatrix)
 accuracyComparisonTable
@@ -280,11 +280,11 @@ plot(tanPerfROC, add = TRUE, col="red")
 plot(bayesPerfROC, add = TRUE, col="green")
 plot(dtPerfROC, add = TRUE, col="violet")
 title(main="ROC Comparison of different Classifiers")
-legend(0.6,0.4,c("Linear Regression","Tree Augmented Naive Bayes","Bayes Network","Decision Tree"),
+legend(0.6,0.4,c("Logistic Regression","Tree Augmented Naive Bayes","Bayes Network","Decision Tree"),
        col=c("blue","red", "green","violet"), lwd=5, y.intersp = 0.4)
 
 plot(linPerfPR, col="blue")
-legend(0.6,0.9,c("Linear Regression"),col=c("blue"), lwd=5)
+legend(0.6,0.9,c("Logistic Regression"),col=c("blue"), lwd=5)
 plot(tanPerfPR, col="red")
 legend(0.6,0.9,c("Tree Augmented Naive Bayes"),col=c("red"), lwd=5)
 plot(bayesPerfPR, col="green")
@@ -295,8 +295,9 @@ legend(0.6,0.8,c("Decision Tree"),col=c("violet"), lwd=5)
 #how well are we able to predict death or dependence at 6 months? [response required]
 #what is the average treatment effect of aspirin on death or dependence at 6 months? Is aspirin significantly better than the alternative? [response required]
 data <- mutate(data,DOD=ifelse(OCCODE==1|OCCODE==2,1,0))
-aspirinATE <- (sum(data$DOD==1&data$RXASP=="N")-sum(data$DOD==1&data$RXASP=="Y"))/nrow(data)*100 #0.6%
-AspirinATE
-heparinATE <-(sum(data$DOD==1&data$RXHEP=="N")-sum(data$DOD==1&data$RXASP!="N"))/nrow(data)*100 #0.3%
-heparinATE
+aspirinATE <- ((sum(data$DOD==1&data$RXASP=="N")/sum(data$RXASP=="N"))-(sum(data$DOD==1&data$RXASP=="Y")/sum(data$RXASP=="Y"))) * 100
+paste("Aspirin ATE: ", toString(aspirinATE),"%")
+heparinATE <-((sum(data$DOD==1&data$RXHEP=="N")/sum(data$RXHEP=="N"))-(sum(data$DOD==1&data$RXHEP!="N")/sum(data$RXHEP!="N"))) * 100
+paste("Heparin ATE: ",toString(heparinATE), "%")
+paste("Probability of randomly drawing this or an even more extrem sample: ",pbinom(sum(data$DOD==1&data$RXASP=="Y"), size=sum(data$DOD), prob=(sum(data$DOD==1&data$RXHEP!="N")/sum(data$DOD))),"%")
 #of the algorithms tested, which algorithms perform the best? Justify your statement. [response required]

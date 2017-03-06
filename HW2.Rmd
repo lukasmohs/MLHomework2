@@ -16,6 +16,7 @@ library(ROCR)
 library(tableone)
 library(caret)
 library(rpart)
+library(e1071)
 ```
 
 ```{r eval=T, message=T}
@@ -56,7 +57,7 @@ predictedOdds(tree, depressionData[3,], active=1)
 Fix the function ```predictedOdds``` so that ```predictedOddsOnDataSet``` outputs the odds for each patient in data. Use the debugger functions like ```debugOnce(predictedOdds)``` or ```browser()``` to inspect the code. What did you change?
 
 *The recursive call of the  ```predictedOdds() ``` function had a syntax error in the last argument:
-To either get the false or true child of the current node, one has indicate the value in the corresponding row by a string. I changed  ```tree[active,'falseChild'] ``` to  ```tree[active,'falseChild']``` and  ```tree[active,'trueChild'] ``` to  ```tree[active,'trueChild'] ```.*
+To either get the false or true child of the current node, one has indicate the value in the corresponding row by a string. I changed  ```tree[active,falseChild] ``` to  ```tree[active,'falseChild']``` and  ```tree[active,trueChild] ``` to  ```tree[active,'trueChild'] ```.*
 
 Add a column of the predicted probabilities of hospitalization to depressionData. Display it.
 ```{r eval=T, message=T}
@@ -218,10 +219,7 @@ dataTest$DOD <- as.factor(dataTest$DOD)
 
 ############## Naive Bayes   ##############
 
-library(ROCR) 
-library(e1071)
 nb = naiveBayes(DOD~.,dataTrain)
-
 bayesAccuracy <- sum(predict(nb, dataTest)==dataTest$DOD) / nrow(dataTest)
 bayesPredictedProbabilities <- predict(nb, dataTest,"raw")
 bayesPred <- prediction( bayesPredictedProbabilities[,2], dataTest$DOD)
@@ -242,7 +240,7 @@ tanPred <- prediction( tanPredictedProbabilities[2], tanTest$DOD)
 tanPerfROC <- performance(tanPred,"tpr","fpr")
 tanPerfPR <- performance(tanPred, "prec", "rec")
 
-############## Linear Regression ##############
+############## Logistic Regression ##############
 
 lr <- glm(formula = DOD  ~ .,
           family=binomial(link="logit"),data = dataTrain, control = list(maxit = 100))
@@ -276,24 +274,56 @@ tanAccuracyInCI <- paste(toString(tanAccuracy-1.96*sqrt(tanAccuracy*(1-tanAccura
 bayesAccuracyInCI <- paste(toString(bayesAccuracy-1.96*sqrt(bayesAccuracy*(1-bayesAccuracy)/n)),
                            toString(bayesAccuracy+1.96*sqrt(bayesAccuracy*(1-bayesAccuracy)/n)), sep="; ")
 accuracyComparisonMatrix <- matrix(c(dtAccuracyInCI,lrAccuracyInCI,tanAccuracyInCI,bayesAccuracyInCI),ncol=4,byrow=TRUE)
-colnames(accuracyComparisonMatrix) <- c("Decision Tree","Linear Regression", "Tree Augmented Naive Bayes", "Naive Bayes")
+colnames(accuracyComparisonMatrix) <- c("Decision Tree","Logistic Regression", "Tree Augmented Naive Bayes", "Naive Bayes")
 rownames(accuracyComparisonMatrix) <- c("Accuracy")
 accuracyComparisonTable <- as.table(accuracyComparisonMatrix)
 accuracyComparisonTable
 ```
 
 Construct an ROC (receiver operating characteristic) curve for each model and overlay them on a graph using ggplot. Include a legend. Hint: you will find the package "ROCR" helpful (or you might try the package "precrec", but I have not tested it).
-[response required]
+```{r eval=T, message=T}
+plot(linPerfROC, col="blue")
+plot(tanPerfROC, add = TRUE, col="red")
+plot(bayesPerfROC, add = TRUE, col="green")
+plot(dtPerfROC, add = TRUE, col="violet")
+title(main="ROC Comparison of different Classifiers")
+legend("bottom",c("Logistic Regression","Tree Augmented Naive Bayes","Bayes Network","Decision Tree"),
+       col=c("blue","red", "green","violet"), lwd=3, y.intersp = 1.0)
+```
 
 Construct a PR (precision recall) curve for each model. Include a legend.
-[response required]
+```{r eval=T, message=T}
+plot(linPerfPR, col="blue")
+title(main="Precision/Recall Curve of Logistic Regression")
+legend("bottom",c("Logistic Regression"),col=c("blue"), lwd=5)
+plot(tanPerfPR, col="red")
+title(main="Precision/Recall Curve of Tree Augmented Naive Bayes")
+legend("bottom",c("Tree Augmented Naive Bayes"),col=c("red"), lwd=5)
+plot(bayesPerfPR, col="green")
+title(main="Precision/Recall Curve of Bayes Network")
+legend("bottom",c("Bayes Network"),col=c("green"), lwd=5)
+plot(dtPerfPR, col="violet")
+title(main="Precision/Recall Curve of Decision Tree")
+legend("bottom",c("Decision Tree"),col=c("violet"), lwd=5)
+```
 
 #### Conclusions
 Let's draw conclusions from this study. Specifically,
+- how well are we able to predict death or dependence at 6 months? 
 
-- how well are we able to predict death or dependence at 6 months? [response required]
-- what is the average treatment effect of aspirin on death or dependence at 6 months? Is aspirin significantly better than the alternative? [response required]
+*Due to the low accuracies of the applied algoirthms (below 0.8), one can state that we could not build a conclusive model. Comparing the different algorithms, identifies the Decision Tree and the Logisitc Regression to perform slightly better. However, the error rate of all models outlines the lack of significance. *
+
+- what is the average treatment effect of aspirin on death or dependence at 6 months? - Is aspirin significantly better than the alternative? 
+```{r eval=T, message=T}
+data <- mutate(data,DOD=ifelse(OCCODE==1|OCCODE==2,1,0))
+aspirinATE <- ((sum(data$DOD==1&data$RXASP=="N")/sum(data$RXASP=="N"))-(sum(data$DOD==1&data$RXASP=="Y")/sum(data$RXASP=="Y"))) * 100
+paste("Aspirin ATE: ", toString(aspirinATE),"%")
+heparinATE <-((sum(data$DOD==1&data$RXHEP=="N")/sum(data$RXHEP=="N"))-(sum(data$DOD==1&data$RXHEP!="N")/sum(data$RXHEP!="N"))) * 100
+paste("Heparin ATE: ",toString(heparinATE), "%")
+paste("Probability of randomly drawing this or an even more extrem sample: ",pbinom(sum(data$DOD==1&data$RXASP=="Y"), size=sum(data$DOD), prob=(sum(data$DOD==1&data$RXHEP!="N")/sum(data$DOD))),"%")
+```
+*From this small Average Treatment Effect of Aspirin (1.3%) compared to 0.0% of Heparin, we can conclude that Aspirin is not significantally decreading the outcome of death or dependence at 6 month.*
+
 - of the algorithms tested, which algorithms perform the best? Justify your statement.
-[response required]
 
-Congratulations, you've conducted a comparison of machine learning algorithms for mortality prediction! Commit your solutions to your git repository with an informative comment. ```git push``` will help you upload it to the cloud service you choose to use (github, bitbucket, etc).
+*Considering the results of each classifier on the test set, which where presented above, we can conclude that the Logistic Regression as well as the Decision Treee perform better than the other two classifiers given a higher accuracy.*
