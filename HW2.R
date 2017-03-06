@@ -1,4 +1,4 @@
-#Overview
+#INFO: This file contains the plain source code, answers can be found in the .rmd file
 
 # Homework 2 is about applying what you have learned in class into analysis in R. 
 # You will draw from both your learning in lecture and discussion with the skills 
@@ -109,49 +109,6 @@ MAP <- (individualsWithDiabetes + alpha -1) /
 MAP #[1] 0.375
 
 #Part 2: Analysis (9 points) Preliminaries
-# Y: What was the definition of the primary outcome in this study? 
-# Two primary outcomes were 'death within 14 days' and 'death, dependency, and incomplete recovery' at 6 months."
-# Meanwhule the protocol just specified them as: 
-# (a) 'death from any cause within 14 days'
-# (b) 'death or dependency (ie, needing help from another person with daily activities) at 6 months'
-
-# What is (are) the variable name(s) for the outcome?
-# For both of the first study outcomes, the variables are called: 
-# 'DDEAD' and described as 'Dead on discharge form' and
-# 'FDEAD', which is described as 'Dead at six month follow-up (Y/N)'
-
-# U: what is (are) the variable name(s) for the intervention, and what is (are) their possible values?
-# DASP14 Aspirin given for 14 days or till death or discharge (Y/N)
-# DLH14 Low dose heparin given for 14 days or till death/discharge (Y/N)
-# DMH14 Medium dose heparin given for 14 days or till death/discharge (Y/N)
-# DHH14 Medium dose heparin given for 14 days etc in pilot (combine with above)
-# DOAC Other anticoagulants (Y/N)
-# DGORM Glycerol or manitol (Y/N)
-# DSTER Steroids (Y/N)
-# DCAA Calcium antagonists (Y/N)
-# DHAEMD Haemodilution (Y/N)
-# DCAREND Carotid surgery (Y/N)
-# DTHROMB Thrombolysis (Y/N)
-# DMAJNCH Major non-cerebral haemorrhage (Y/N)
-
-# DSCH Non trial subcutaneous heparin (Y/N)
-# DIVH Non trial intravenous heparin (Y/N)
-# DAP Non trial antiplatelet drug (Y/N)
-
-
-# V, W: describe the covariates included and the population being studied.
-
-
-# A patient was eligible for the study, if a physician identified an acute stroke,
-# where the severity was not taken into account, but the onset must have been less than 48 hours previously.
-# Further, there should be no evidence about intracranial haemorrhage
-# and no clear indications for heparin or aspirin and neither contraindications to heparin or aspirin.
-# In total, 19 435 patients were observed, which were between 16 and 99 years old with an average of 71.72 years.
-# 46% of the population was female and 54% male. The delay of the stroke and the randomization
-# was between one and 48 hours with a mean of 20.12 hours. 71% of the patients were awake during the onset,
-# the other 29% were sleeping. The conscious level of the patients was mostly alert (77%), 22% were classified as drowsy 
-# and 1% was without consciousness.
-
 # Construct a so-called Table 1 for groups of {aspirin, no aspirin} use, 
 # including information on age, gender, systolic blood pressure, and conscious state.
 

@@ -288,24 +288,25 @@ dataTest &lt;- mutate(dataTest,DOD=ifelse(OCCODE==1|OCCODE==2,1,0))</code></pre>
 <p>What percent of patients are dead or dependent at 6 months in your train set and test set?</p>
 <pre class="r"><code>percentDeadInTrain &lt;- sum(dataTrain$OCCODE==1 | dataTrain$OCCODE==2)/nrow(dataTrain)
 #alternatively: percentDeadInTrain &lt;- sum(dataTrain$FDEAD==&quot;Y&quot; | dataTrain$FDENNIS==&quot;Y&quot;)/nrow(dataTrain)
-paste(&quot;Dead or dependent at 6 months in your train set: &quot;,toString(percentDeadInTrain))</code></pre>
-<pre><code>## [1] &quot;Dead or dependent at 6 months in your train set:  0.623379296151471&quot;</code></pre>
+paste(&quot;Dead or dependent at 6 months in your train set: &quot;,toString(percentDeadInTrain), &quot;%&quot;)</code></pre>
+<pre><code>## [1] &quot;Dead or dependent at 6 months in your train set:  0.623379296151471 %&quot;</code></pre>
 <pre class="r"><code>percentDeadInTest &lt;- sum(dataTest$OCCODE==1 | dataTest$OCCODE==2)/nrow(dataTest)
 #alternatively: percentDeadInTest &lt;- sum(dataTest$FDEAD==&quot;Y&quot; | dataTrain$FDENNIS==&quot;Y&quot;)/nrow(dataTest)
-paste(&quot;Dead or dependent at 6 months in your test set: &quot;, toString(percentDeadInTest))</code></pre>
-<pre><code>## [1] &quot;Dead or dependent at 6 months in your test set:  0.624369661418133&quot;</code></pre>
-<p>Choose which variables to include in your model. For example, remove variables for outcomes at 14 days (because if you are dead at 14 days you are certainly dead at 6 months). Moreover, you should remove all features measured after baseline if you want to make a prediction based on baseline data. Similarly, specific indicators of the outcome should also be removed, since those are measurements past the baseline that are not our outcome of interest. For these reasons, you will need to remove clusters of variables. Justify your approach. [response required]</p>
-<p>Of the remaining variables, decide whether to exclude variables with missing data, impute them, and/or use indicator variables. (Note that if you choose multiple imputation for some variables, you would need to pool the results when evaluating performance, however for homework you may just use the first imputed data set). Justify your approach.</p>
-<p><em>First, just include the variables from sction: “Randomisation data” (according to: <a href="http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf" class="uri">http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf</a>).This includes all the information that were collected before Randomisation at the beginning of the study.</em></p>
+paste(&quot;Dead or dependent at 6 months in your test set: &quot;, toString(percentDeadInTest), &quot;%&quot;)</code></pre>
+<pre><code>## [1] &quot;Dead or dependent at 6 months in your test set:  0.624369661418133 %&quot;</code></pre>
+<p>Choose which variables to include in your model. For example, remove variables for outcomes at 14 days (because if you are dead at 14 days you are certainly dead at 6 months). Moreover, you should remove all features measured after baseline if you want to make a prediction based on baseline data. Similarly, specific indicators of the outcome should also be removed, since those are measurements past the baseline that are not our outcome of interest. For these reasons, you will need to remove clusters of variables. Justify your approach.</p>
+<p><em>First, just include the variables from sction: “Randomisation data” (according to: <a href="http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf" class="uri">http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf</a>). This excludes all the information that were not collected before Randomisation at the beginning of the study. Afterwards, only the country code (“CNTRYNUM”) is added as a variable to the train and test data set. Finally, the dummy variable “DOD” is kept for training and test data as a label.</em> <em>All other varibles basically contained study results after 14 days or indicated or diagnose variables, which should be excluded.</em></p>
 <pre class="r"><code>dataTrain &lt;- dataTrain[c(which( colnames(dataTrain)==&quot;HOSPNUM&quot;) : which( colnames(dataTrain)==&quot;RXHEP&quot;), which( colnames(dataTrain)==&quot;CNTRYNUM&quot;), which( colnames(dataTrain)==&quot;DOD&quot;))]
 dataTest &lt;- dataTest[c(which( colnames(dataTest)==&quot;HOSPNUM&quot;) : which( colnames(dataTest)==&quot;RXHEP&quot;), which( colnames(dataTest)==&quot;CNTRYNUM&quot;), which( colnames(dataTest)==&quot;DOD&quot;))]</code></pre>
-<p>Use the following machine learning algorithms: logistic regression, naive Bayes, Tree Augmented Naive Bayes, and decision tree (specify any parameters you set that are not the default). The packages that you may find useful here are: “glm”, “bnlearn”, and “rpart”, but you may use others if desired. In a table, report the accuracy with 95% confidence intervals for each algorithm.</p>
+<p>Of the remaining variables, decide whether to exclude variables with missing data, impute them, and/or use indicator variables. (Note that if you choose multiple imputation for some variables, you would need to pool the results when evaluating performance, however for homework you may just use the first imputed data set). Justify your approach.</p>
+<p><em>The provided variables have not been modified further except for changing the dummy variable to a factor. Besides that, the Tree Augmented Naive Bayes requires all variables to be a factor, therefore all non-factor variables were dropped for this algorithm. This approach was chosen due to the fact that factoring vairbles like the hospital number “HOSPNUM” would create 452 levels, which result in unequal levels in test and training data.</em></p>
 <pre class="r"><code># Factor the binary outcome variable
 dataTrain$DOD &lt;- as.factor(dataTrain$DOD)
 dataTest$DOD &lt;- as.factor(dataTest$DOD)
-
-
-############## Naive Bayes   ##############
+tanTrain &lt;- dataTrain[ ,sapply(dataTrain, is.factor)]
+tanTest &lt;- dataTest[ ,sapply(dataTest, is.factor)]</code></pre>
+<p>Use the following machine learning algorithms: logistic regression, naive Bayes, Tree Augmented Naive Bayes, and decision tree (specify any parameters you set that are not the default). The packages that you may find useful here are: “glm”, “bnlearn”, and “rpart”, but you may use others if desired. In a table, report the accuracy with 95% confidence intervals for each algorithm.</p>
+<pre class="r"><code>############## Naive Bayes   ##############
 
 nb = naiveBayes(DOD~.,dataTrain)
 bayesAccuracy &lt;- sum(predict(nb, dataTest)==dataTest$DOD) / nrow(dataTest)
@@ -316,8 +317,7 @@ bayesPerfPR &lt;- performance(bayesPred, &quot;prec&quot;, &quot;rec&quot;)
 
 ############## Tree Augmented NB ##############
 
-tanTrain &lt;- dataTrain[ ,sapply(dataTrain, is.factor)]
-tanTest &lt;- dataTest[ ,sapply(dataTest, is.factor)]
+
 
 tan = tree.bayes(tanTrain, &quot;DOD&quot;)
 fittedTan = bn.fit(tan, tanTrain)
@@ -377,7 +377,7 @@ accuracyComparisonTable</code></pre>
 ##          Logistic Regression                
 ## Accuracy 0.72684935209965; 0.744386626082917
 ##          Tree Augmented Naive Bayes          
-## Accuracy 0.686539324501142; 0.704836614574705
+## Accuracy 0.685605302128021; 0.703918213360298
 ##          Naive Bayes                         
 ## Accuracy 0.692663449460878; 0.710856155355423</code></pre>
 <p>Construct an ROC (receiver operating characteristic) curve for each model and overlay them on a graph using ggplot. Include a legend. Hint: you will find the package “ROCR” helpful (or you might try the package “precrec”, but I have not tested it).</p>
