@@ -139,23 +139,30 @@ MAP
 *The variable 'OCCODE' furthermore describes the study outcome after six month in moire granular way by providing 5 potential values: 1:dead, 2:dependent, 3:not recovered, 4:recovered, 8 or 9: missing status.*
 
 - **U:** what is (are) the variable name(s) for the intervention, and what is (are) their possible values?
+*The two main variables that are describing the intervention are the following:*
+*'RXASP', which indicates whther aspirin was allocated by either stating true ('Y') or false ('N') and*
+*'RXHEP' that states if heparin was allocated based on four levels: high (H), medium (M), low(L) and none(N)*
 
-*DASP14 Aspirin given for 14 days or till death or discharge (Y/N) *
-*DLH14 Low dose heparin given for 14 days or till death/discharge (Y/N) *
-*DMH14 Medium dose heparin given for 14 days or till death/discharge (Y/N) *
-*DHH14 Medium dose heparin given for 14 days etc in pilot (combine with above) *
-*DOAC Other anticoagulants (Y/N) *
-*DGORM Glycerol or manitol (Y/N)*
-*DSTER Steroids (Y/N)*
-*DCAA Calcium antagonists (Y/N)*
-*DHAEMD Haemodilution (Y/N)*
-*DCAREND Carotid surgery (Y/N)*
-*DTHROMB Thrombolysis (Y/N)*
-*DMAJNCH Major non-cerebral haemorrhage (Y/N)*
+*Besides these two variables, the following columns highlight several non-trial treatments that were undertaken in the hospital:*
+*'DASP14': Aspirin given for 14 days or till death or discharge (Y/N) *
+*'DLH14': Low dose heparin given for 14 days or till death/discharge (Y/N) *
+*'DMH14': Medium dose heparin given for 14 days or till death/discharge (Y/N) *
+*'DHH14': Medium dose heparin given for 14 days etc in pilot (combine with above) *
+*'DOAC': Other anticoagulants (Y/N) *
+*'DGORM': Glycerol or manitol (Y/N)*
+*'DSTER': Steroids (Y/N)*
+*'DCAA': Calcium antagonists (Y/N)*
+*'DHAEMD': Haemodilution (Y/N)*
+*'DCAREND': Carotid surgery (Y/N)*
+*'DTHROMB': Thrombolysis (Y/N)*
+*'DMAJNCH': Major non-cerebral haemorrhage (Y/N)*
 
 
 - **V, W:** describe the covariates included and the population being studied.
+*The covariats of the study that were measured during the initial visit of the individual at the hospital include the following:*
+*Each hospital was assigned a number within the column 'HOSPNUM'. 'RDELAY' states the delay between the onset of the stroke and the randomisation. The conscious level of the individual was observed ('RCONSC'). Gender ('SEX') and age ('AGE') was storead as well as the syntoms noted on waking ('RSLEEP'). Atrial fibrillation ('RATRIAL'), the potential use of CT before randomisation ('RCT') and the visibility of the infarct on the CT ('RVISINF') was captured. The intake of both study drugs aspirin and heparin 48 hours before randomising was documented as 'RHEP24' ans 'RASP3'. 'RSBP' indicates Systolic blood pressure at randomisation. Then the varibales from 'RDEF1' to 'RDEF8' identify different deficit at the body of the individual.Finally, several time measurements state at what time the randomisation was realized
 
+*A patient was eligible for the study, if a physician identified an acute stroke, where the severity was not taken into account, but the onset must have been less than 48 hours previously. Further, there should be no evidence about intracranial haemorrhage and no clear indications for heparin or aspirin and neither contraindications to heparin or aspirin.In total, 19 435 patients were observed, which were between 16 and 99 years old with an average of 71.72 years. 46% of the population was female and 54% male. The delay of the stroke and the randomization was between one and 48 hours with a mean of 20.12 hours. 71% of the patients were awake during the onset, the other 29% were sleeping. The conscious level of the patients was mostly alert (77%), 22% were classified as drowsy and 1% was without consciousness. *
 
 
 
@@ -198,8 +205,8 @@ paste("Dead or dependent at 6 months in your test set: ", toString(percentDeadIn
 
 Choose which variables to include in your model. For example, remove variables for outcomes at 14 days (because if you are dead at 14 days you are certainly dead at 6 months). Moreover, you should remove all features measured after baseline if you want to make a prediction based on baseline data. Similarly, specific indicators of the outcome should also be removed, since those are measurements past the baseline that are not our outcome of interest. For these reasons, you will need to remove clusters of variables. Justify your approach.
 
-*First, just the variables from the sction "Randomisation data" (according to: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf) where included. This excludes all the information that were not collected before Randomisation at the beginning of the study. Afterwards, only the country code ("CNTRYNUM") is added as well as 'OCCODE' and 'DNOSTRK', which are used for cleaning lateron. Finally, the dummy variable "DOD" is kept for training and test data as a label.*
-*All other excluded varibles basically contained study results after 14 days or indicated or diagnose variables, which should be excluded.*
+*First, just the variables from the section "Randomisation data" (according to: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf) where included. This excludes all the information that were not collected before Randomisation at the beginning of the study. Afterwards, only the country code ("CNTRYNUM") is added as well as 'OCCODE' and 'DNOSTRK' columns, which are used for cleaning and described later. Finally, the dummy variable "DOD" is kept for training and testing data as a label.*
+*All other excluded varibles basically contained study results after 14 days or indicated or diagnosed variables, which was not part of the scope.*
 ```{r eval=T, message=F}
 dataTrain <- dataTrain[c(which( colnames(dataTrain)=="HOSPNUM") : which( colnames(dataTrain)=="RXHEP"), which( colnames(dataTrain)=="CNTRYNUM"), which( colnames(dataTrain)=="DOD"), which( colnames(dataTest)=="OCCODE"), which( colnames(dataTest)=="DNOSTRK"))]
 dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(dataTest)=="RXHEP"), which( colnames(dataTest)=="CNTRYNUM"), which( colnames(dataTest)=="DOD"), which( colnames(dataTest)=="OCCODE"), which( colnames(dataTest)=="DNOSTRK"))]
