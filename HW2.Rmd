@@ -126,7 +126,7 @@ MAP <- (individualsWithDiabetes + alpha -1) /
 MAP
 ```
 
-## Part 2: Analysis (9 points)
+## Part 2: Analysis
 
 #### Preliminaries
 - **Y:** What was the definition of the primary outcome in this study?
