@@ -99,7 +99,7 @@ individualsWithDiabetes <- 5
 individualsWithoutDiabetes <- 5
 MLE <- individualsWithDiabetes/
   (individualsWithDiabetes+individualsWithoutDiabetes)
-MLE #[1] 0.5
+MLE
 
 # what is the maximum a posteriori estimate for the prevalence of diabetes?
 alpha <- 11
@@ -208,7 +208,7 @@ dataTest$DOD <- as.factor(dataTest$DOD)
 
 
 
-#NB   ##############
+############## Naive Bayes   ##############
 
 library(ROCR) 
 library(e1071)
@@ -220,7 +220,7 @@ bayesPred <- prediction( bayesPredictedProbabilities[,2], dataTest$DOD)
 bayesPerfROC <- performance(bayesPred,"tpr","fpr")
 bayesPerfPR <- performance(bayesPred, "prec", "rec")
 
-## fitted tan ##############
+############## Tree Augmented NB ##############
 
 tanTrain <- dataTrain[ ,sapply(dataTrain, is.factor)]
 tanTest <- dataTest[ ,sapply(dataTest, is.factor)]
@@ -234,7 +234,7 @@ tanPred <- prediction( tanPredictedProbabilities[2], tanTest$DOD)
 tanPerfROC <- performance(tanPred,"tpr","fpr")
 tanPerfPR <- performance(tanPred, "prec", "rec")
 
-## Linear Regression ##############
+############## Linear Regression ##############
 
 lr <- glm(formula = DOD  ~ .,
           family=binomial(link="logit"),data = dataTrain, control = list(maxit = 100))
@@ -246,7 +246,7 @@ linPred <- prediction( lrPredictedProbabilities, dataTest$DOD)
 linPerfROC <- performance(linPred,"tpr","fpr")
 linPerfPR <- performance(linPred, "prec", "rec")
 
-## Decision Tree ##############
+############## Decision Tree ##############
 
 tree <- rpart(DOD~ .,
              data=dataTrain,
@@ -257,10 +257,17 @@ dtPred <- prediction( dtPredictedProbabilities[,2], dataTest$DOD)
 dtPerfROC <- performance(dtPred,"tpr","fpr")
 dtPerfPR <- performance(dtPred, "prec", "rec")
 
-## Accuracy comparison
-# In a table, report the accuracy with 95% confidence intervals for each algorithm. 
-#table(c("Decision Tree","Linear Regression", "Tree Augmented Naive Bayes", "Naive Bayes"),c(dtAccuracy,lrAccurarcy,tanAccuracy,bayesAccuracy))
-accuracyComparisonMatrix <- matrix(c(dtAccuracy,lrAccuracy,tanAccuracy,bayesAccuracy),ncol=4,byrow=TRUE)
+############## Accuracy comparison  ##############
+n <- nrow(dataTest)
+dtAccuracyInCI <-  paste(toString(dtAccuracy-1.96*sqrt(dtAccuracy*(1-dtAccuracy)/n)),
+                         toString(dtAccuracy+1.96*sqrt(dtAccuracy*(1-dtAccuracy)/n)),sep="; ")
+lrAccuracyInCI <- paste(toString(lrAccuracy-1.96*sqrt(lrAccuracy*(1-lrAccuracy)/n)),
+                        toString(lrAccuracy+1.96*sqrt(lrAccuracy*(1-lrAccuracy)/n)), sep="; ")
+tanAccuracyInCI <- paste(toString(tanAccuracy-1.96*sqrt(tanAccuracy*(1-tanAccuracy)/n)),
+                         toString(tanAccuracy+1.96*sqrt(tanAccuracy*(1-tanAccuracy)/n)), sep="; ")
+bayesAccuracyInCI <- paste(toString(bayesAccuracy-1.96*sqrt(bayesAccuracy*(1-bayesAccuracy)/n)),
+                           toString(bayesAccuracy+1.96*sqrt(bayesAccuracy*(1-bayesAccuracy)/n)), sep="; ")
+accuracyComparisonMatrix <- matrix(c(dtAccuracyInCI,lrAccuracyInCI,tanAccuracyInCI,bayesAccuracyInCI),ncol=4,byrow=TRUE)
 colnames(accuracyComparisonMatrix) <- c("Decision Tree","Linear Regression", "Tree Augmented Naive Bayes", "Naive Bayes")
 rownames(accuracyComparisonMatrix) <- c("Accuracy")
 accuracyComparisonTable <- as.table(accuracyComparisonMatrix)

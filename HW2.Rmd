@@ -3,7 +3,7 @@
 ## Part 1: Concept questions (6 points)
 
 The code that follows introduces a toy data set, decision tree model, and two prediction functions.
-```{r eval=T, message=T}
+```{r eval=T, message=F}
 #import libraries
 library(vegan)
 library(survival)
@@ -16,7 +16,9 @@ library(ROCR)
 library(tableone)
 library(caret)
 library(rpart)
+```
 
+```{r eval=T, message=T}
 # synthetic depression data
 depressionData = data.frame( # do not change "depressionData"
   pregnant = c(1,0,1,1),
@@ -48,30 +50,81 @@ predictedOdds = function(tree, datum, active = 1) {
 ```
   
 First, verify to yourself that, for the fourth patient in ```depressionData```, the tree should have output an odds of 0.1.
+```{r eval=T, message=T}
+predictedOdds(tree, depressionData[3,], active=1)
+```
+Fix the function ```predictedOdds``` so that ```predictedOddsOnDataSet``` outputs the odds for each patient in data. Use the debugger functions like ```debugOnce(predictedOdds)``` or ```browser()``` to inspect the code. What did you change?
 
-Fix the function ```predictedOdds``` so that ```predictedOddsOnDataSet``` outputs the odds for each patient in data. Use the debugger functions like ```debugOnce(predictedOdds)``` or ```browser()``` to inspect the code. 
-
-What did you change?
-[response required]
+*The recursive call of the  ```predictedOdds() ``` function had a syntax error in the last argument:
+To either get the false or true child of the current node, one has indicate the value in the corresponding row by a string. I changed  ```tree[active,'falseChild'] ``` to  ```tree[active,'falseChild']``` and  ```tree[active,'trueChild'] ``` to  ```tree[active,'trueChild'] ```.*
 
 Add a column of the predicted probabilities of hospitalization to depressionData. Display it.
-[response required]
+```{r eval=T, message=T}
+depressionData <- depressionData %>% mutate(probabilityHospitalized = predictOddsOnDataSet(tree,depressionData))
+depressionData
+```
 
 Using a threshold probability of 0.5, what is:
+```{r eval=T, message=F}
+depressionData <- mutate(depressionData, predictedHospitalized = ifelse(probabilityHospitalized > 0.5,"TRUE","FALSE"))
+TP <- sum(depressionData$hospitalized=="TRUE" & depressionData$predictedHospitalized=="TRUE")
+FP <- sum(depressionData$hospitalized=="FALSE" & depressionData$predictedHospitalized=="TRUE")
+FN <- sum(depressionData$hospitalized=="TRUE" & depressionData$predictedHospitalized=="FALSE")
+TN <- sum(depressionData$hospitalized=="FALSE" & depressionData$predictedHospitalized=="FALSE")
+```
 
 - the accuracy of the model?
-- the sensitivity of the model?
-- the specificity of the model?
-- the precision of the model?
-- the recall of the model?
+```{r eval=T, message=T}
+accuracy <- sum(depressionData$hospitalized==depressionData$predictedHospitalized) / nrow(depressionData) 
+#or
+accuracy <- (TP+TN) / (TP+FN+FP+TN) 
+accuracy
+```
 
-[responses required]  
+- the sensitivity of the model?
+```{r eval=T, message=t}
+sensitivity <- TP/(TP+FN)
+sensitivity
+```
+
+- the specificity of the model?
+```{r eval=T, message=T}
+specificity <- 1-(FP/(TN+FP))
+specificity
+```
+
+- the precision of the model?
+```{r eval=T, message=T}
+precision <- TP/(TP+FP)
+precision
+```
+
+- the recall of the model?
+```{r eval=T, message=T}
+recall <- TP/(TP+FN)
+recall
+```
+
 
 Suppose you want to know the prevalence of diabetes in Pittsburgh. If you randomly survey 10 Pittsburghers and 5 of them state they have diabetes:
 
 - what is the maximum likelihood estimate for the prevalence of diabetes?
+```{r eval=T, message=T}
+individualsWithDiabetes <- 5
+individualsWithoutDiabetes <- 5
+MLE <- individualsWithDiabetes/
+  (individualsWithDiabetes+individualsWithoutDiabetes)
+MLE
+```
+
 - given your strong belief specified by a beta prior of $\alpha = 11, \beta = 21$, what is the maximum a posteriori estimate for the prevalence of diabetes?
-[responses required]  
+```{r eval=T, message=T} 
+alpha <- 11
+beta <- 21
+MAP <- (individualsWithDiabetes + alpha -1) /
+  (individualsWithDiabetes+individualsWithoutDiabetes+alpha+beta-2)
+MAP
+```
 
 ## Part 2: Analysis (9 points)
 
@@ -79,35 +132,155 @@ Suppose you want to know the prevalence of diabetes in Pittsburgh. If you random
 - **Y:** What was the definition of the primary outcome in this study?
 - What is (are) the variable name(s) for the outcome?
 
+*Two primary outcomes were  'death within 14 days' and 'death, dependency, and incomplete recovery' at 6 months. Meanwhule the protocol just specified them as: *
+*(a)'death from any cause within 14 days'and*
+*(b) 'death or dependency (ie, needing help from another person with daily activities) at 6 months'*
+
 - **U:** what is (are) the variable name(s) for the intervention, and what is (are) their possible values?
+
+*For both of the first study outcomes, the variables are called: *
+*'DDEAD' and described as 'Dead on discharge form' and*
+*'FDEAD', which is described as 'Dead at six month follow-up (Y/N)'*
+*The variable 'OCCODE' also described the study outcome in moire granular way*
 
 - **V, W:** describe the covariates included and the population being studied.
 
-[responses required]
+*DASP14 Aspirin given for 14 days or till death or discharge (Y/N) *
+*DLH14 Low dose heparin given for 14 days or till death/discharge (Y/N) *
+*DMH14 Medium dose heparin given for 14 days or till death/discharge (Y/N) *
+*DHH14 Medium dose heparin given for 14 days etc in pilot (combine with above) *
+*DOAC Other anticoagulants (Y/N) *
+*DGORM Glycerol or manitol (Y/N)*
+*DSTER Steroids (Y/N)*
+*DCAA Calcium antagonists (Y/N)*
+*DHAEMD Haemodilution (Y/N)*
+*DCAREND Carotid surgery (Y/N)*
+*DTHROMB Thrombolysis (Y/N)*
+*DMAJNCH Major non-cerebral haemorrhage (Y/N)*
+
 
 - Construct a so-called Table 1 for groups of {aspirin, no aspirin} use, including information on age, gender, systolic blood pressure, and conscious state.
-```{r eval=T, message=F}
-
+```{r eval=T, message=T}
 # Get dataset from: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_corrected.csv
 
 data <- read.csv("IST_corrected.csv")
+listVariables <- c("AGE", "SEX", "RSBP", "RCONSC")
+categorialVariables <- c("SEX","RCONSC")
+table1 <- CreateTableOne(vars = listVariables, data = data, 
+              factorVars = categorialVariables,  strata = "RXASP")
+table1
 ```
-[response required]
+
 
 #### Machine learning analysis
 Note: for this analysis, use a simple 50-50 train-test split.
+```{r eval=T, message=F}
+dataTrain = data[seq(1,nrow(data),2),]
+dataTest = data[seq(2,nrow(data),2),]
+```
 
-Let our outcome of interest be "dead or dependent at 6 months", i.e. so that we have a binary classification problem. What percent of patients are dead or dependent at 6 months in your train set and test set?
-[response required]
+Let our outcome of interest be "dead or dependent at 6 months", i.e. so that we have a binary classification problem.
+```{r eval=T, message=F}
+dataTrain <- mutate(dataTrain,DOD=ifelse(OCCODE==1|OCCODE==2,1,0))
+dataTest <- mutate(dataTest,DOD=ifelse(OCCODE==1|OCCODE==2,1,0))
+```
+What percent of patients are dead or dependent at 6 months in your train set and test set?
+```{r eval=T, message=T}
+percentDeadInTrain <- sum(dataTrain$OCCODE==1 | dataTrain$OCCODE==2)/nrow(dataTrain)
+#alternatively: percentDeadInTrain <- sum(dataTrain$FDEAD=="Y" | dataTrain$FDENNIS=="Y")/nrow(dataTrain)
+"Dead or dependent at 6 months in your train set:"
+percentDeadInTrain
+percentDeadInTest <- sum(dataTest$OCCODE==1 | dataTest$OCCODE==2)/nrow(dataTest)
+#alternatively: percentDeadInTest <- sum(dataTest$FDEAD=="Y" | dataTrain$FDENNIS=="Y")/nrow(dataTest)
+"Dead or dependent at 6 months in your test set:"
+percentDeadInTest
+
+```
 
 Choose which variables to include in your model. For example, remove variables for outcomes at 14 days (because if you are dead at 14 days you are certainly dead at 6 months). Moreover, you should remove all features measured after baseline if you want to make a prediction based on baseline data. Similarly, specific indicators of the outcome should also be removed, since those are measurements past the baseline that are not our outcome of interest. For these reasons, you will need to remove clusters of variables. Justify your approach.
 [response required]
 
 Of the remaining variables, decide whether to exclude variables with missing data, impute them, and/or use indicator variables. (Note that if you choose multiple imputation for some variables, you would need to pool the results when evaluating performance, however for homework you may just use the first imputed data set). Justify your approach.
-[response required]
+
+*First, just include the variables from sction: "Randomisation data" (according to: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf).This includes all the information that were collected before Randomisation at the beginning of the study.* 
+
+```{r eval=T, message=F}
+dataTrain <- dataTrain[c(which( colnames(dataTrain)=="HOSPNUM") : which( colnames(dataTrain)=="RXHEP"), which( colnames(dataTrain)=="CNTRYNUM"), which( colnames(dataTrain)=="DOD"))]
+dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(dataTest)=="RXHEP"), which( colnames(dataTest)=="CNTRYNUM"), which( colnames(dataTest)=="DOD"))]
+```
 
 Use the following machine learning algorithms: logistic regression, naive Bayes, Tree Augmented Naive Bayes, and decision tree (specify any parameters you set that are not the default). The packages that you may find useful here are: "glm", "bnlearn", and "rpart", but you may use others if desired. In a table, report the accuracy with 95% confidence intervals for each algorithm.
-[response required]
+```{r eval=T, message=T}
+# Factor the binary outcome variable
+dataTrain$DOD <- as.factor(dataTrain$DOD)
+dataTest$DOD <- as.factor(dataTest$DOD)
+
+
+############## Naive Bayes   ##############
+
+library(ROCR) 
+library(e1071)
+nb = naiveBayes(DOD~.,dataTrain)
+
+bayesAccuracy <- sum(predict(nb, dataTest)==dataTest$DOD) / nrow(dataTest)
+bayesPredictedProbabilities <- predict(nb, dataTest,"raw")
+bayesPred <- prediction( bayesPredictedProbabilities[,2], dataTest$DOD)
+bayesPerfROC <- performance(bayesPred,"tpr","fpr")
+bayesPerfPR <- performance(bayesPred, "prec", "rec")
+
+############## Tree Augmented NB ##############
+
+tanTrain <- dataTrain[ ,sapply(dataTrain, is.factor)]
+tanTest <- dataTest[ ,sapply(dataTest, is.factor)]
+
+tan = tree.bayes(tanTrain, "DOD")
+fittedTan = bn.fit(tan, tanTrain)
+tanAccuracy <- (sum(predict(object=fittedTan, data=tanTest)==tanTest$DOD)) / nrow(tanTest)
+tanPredictedProbabilities <- attr(predict(object=fittedTan, data=tanTest, prob=TRUE),"prob")
+tanPredictedProbabilities <- data.frame(t(tanPredictedProbabilities))
+tanPred <- prediction( tanPredictedProbabilities[2], tanTest$DOD)
+tanPerfROC <- performance(tanPred,"tpr","fpr")
+tanPerfPR <- performance(tanPred, "prec", "rec")
+
+############## Linear Regression ##############
+
+lr <- glm(formula = DOD  ~ .,
+          family=binomial(link="logit"),data = dataTrain, control = list(maxit = 100))
+lrAccuracy <- (sum(predict(lr, dataTest, type="response")>0.5 & dataTest$DOD==1) 
+                + sum(predict(lr, dataTest, type="response")<0.5 & dataTest$DOD==0) ) / nrow(dataTest)
+
+lrPredictedProbabilities <- predict(lr, dataTest, type="response")
+linPred <- prediction( lrPredictedProbabilities, dataTest$DOD)
+linPerfROC <- performance(linPred,"tpr","fpr")
+linPerfPR <- performance(linPred, "prec", "rec")
+
+############## Decision Tree ##############
+
+tree <- rpart(DOD~ .,
+             data=dataTrain,
+             method="class")
+dtAccuracy <- (sum(predict(tree, dataTest, type="class")==dataTest$DOD)) / nrow(dataTest)
+dtPredictedProbabilities <- predict(tree, dataTest, type = "prob")
+dtPred <- prediction( dtPredictedProbabilities[,2], dataTest$DOD)
+dtPerfROC <- performance(dtPred,"tpr","fpr")
+dtPerfPR <- performance(dtPred, "prec", "rec")
+
+############## Accuracy comparison  ##############
+n <- nrow(dataTest)
+dtAccuracyInCI <-  paste(toString(dtAccuracy-1.96*sqrt(dtAccuracy*(1-dtAccuracy)/n)),
+                         toString(dtAccuracy+1.96*sqrt(dtAccuracy*(1-dtAccuracy)/n)),sep="; ")
+lrAccuracyInCI <- paste(toString(lrAccuracy-1.96*sqrt(lrAccuracy*(1-lrAccuracy)/n)),
+                        toString(lrAccuracy+1.96*sqrt(lrAccuracy*(1-lrAccuracy)/n)), sep="; ")
+tanAccuracyInCI <- paste(toString(tanAccuracy-1.96*sqrt(tanAccuracy*(1-tanAccuracy)/n)),
+                         toString(tanAccuracy+1.96*sqrt(tanAccuracy*(1-tanAccuracy)/n)), sep="; ")
+bayesAccuracyInCI <- paste(toString(bayesAccuracy-1.96*sqrt(bayesAccuracy*(1-bayesAccuracy)/n)),
+                           toString(bayesAccuracy+1.96*sqrt(bayesAccuracy*(1-bayesAccuracy)/n)), sep="; ")
+accuracyComparisonMatrix <- matrix(c(dtAccuracyInCI,lrAccuracyInCI,tanAccuracyInCI,bayesAccuracyInCI),ncol=4,byrow=TRUE)
+colnames(accuracyComparisonMatrix) <- c("Decision Tree","Linear Regression", "Tree Augmented Naive Bayes", "Naive Bayes")
+rownames(accuracyComparisonMatrix) <- c("Accuracy")
+accuracyComparisonTable <- as.table(accuracyComparisonMatrix)
+accuracyComparisonTable
+```
 
 Construct an ROC (receiver operating characteristic) curve for each model and overlay them on a graph using ggplot. Include a legend. Hint: you will find the package "ROCR" helpful (or you might try the package "precrec", but I have not tested it).
 [response required]
