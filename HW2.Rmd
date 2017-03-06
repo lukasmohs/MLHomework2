@@ -189,33 +189,37 @@ What percent of patients are dead or dependent at 6 months in your train set and
 ```{r eval=T, message=T}
 percentDeadInTrain <- sum(dataTrain$OCCODE==1 | dataTrain$OCCODE==2)/nrow(dataTrain)
 #alternatively: percentDeadInTrain <- sum(dataTrain$FDEAD=="Y" | dataTrain$FDENNIS=="Y")/nrow(dataTrain)
-"Dead or dependent at 6 months in your train set:"
-percentDeadInTrain
+paste("Dead or dependent at 6 months in your train set: ",toString(percentDeadInTrain), "%")
+
 percentDeadInTest <- sum(dataTest$OCCODE==1 | dataTest$OCCODE==2)/nrow(dataTest)
 #alternatively: percentDeadInTest <- sum(dataTest$FDEAD=="Y" | dataTrain$FDENNIS=="Y")/nrow(dataTest)
-"Dead or dependent at 6 months in your test set:"
-percentDeadInTest
+paste("Dead or dependent at 6 months in your test set: ", toString(percentDeadInTest), "%")
 
 ```
 
 Choose which variables to include in your model. For example, remove variables for outcomes at 14 days (because if you are dead at 14 days you are certainly dead at 6 months). Moreover, you should remove all features measured after baseline if you want to make a prediction based on baseline data. Similarly, specific indicators of the outcome should also be removed, since those are measurements past the baseline that are not our outcome of interest. For these reasons, you will need to remove clusters of variables. Justify your approach.
-[response required]
 
-Of the remaining variables, decide whether to exclude variables with missing data, impute them, and/or use indicator variables. (Note that if you choose multiple imputation for some variables, you would need to pool the results when evaluating performance, however for homework you may just use the first imputed data set). Justify your approach.
-
-*First, just include the variables from sction: "Randomisation data" (according to: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf).This includes all the information that were collected before Randomisation at the beginning of the study.* 
-
+*First, just include the variables from sction: "Randomisation data" (according to: http://datashare.is.ed.ac.uk/bitstream/handle/10283/128/IST_variables.pdf). This excludes all the information that were not collected before Randomisation at the beginning of the study. Afterwards, only the country code ("CNTRYNUM") is added as a variable to the train and test data set. Finally, the dummy variable "DOD" is kept for training and test data as a label.*
+*All other varibles basically contained study results after 14 days or indicated or diagnose variables, which should be excluded.*
 ```{r eval=T, message=F}
 dataTrain <- dataTrain[c(which( colnames(dataTrain)=="HOSPNUM") : which( colnames(dataTrain)=="RXHEP"), which( colnames(dataTrain)=="CNTRYNUM"), which( colnames(dataTrain)=="DOD"))]
 dataTest <- dataTest[c(which( colnames(dataTest)=="HOSPNUM") : which( colnames(dataTest)=="RXHEP"), which( colnames(dataTest)=="CNTRYNUM"), which( colnames(dataTest)=="DOD"))]
 ```
 
-Use the following machine learning algorithms: logistic regression, naive Bayes, Tree Augmented Naive Bayes, and decision tree (specify any parameters you set that are not the default). The packages that you may find useful here are: "glm", "bnlearn", and "rpart", but you may use others if desired. In a table, report the accuracy with 95% confidence intervals for each algorithm.
+Of the remaining variables, decide whether to exclude variables with missing data, impute them, and/or use indicator variables. (Note that if you choose multiple imputation for some variables, you would need to pool the results when evaluating performance, however for homework you may just use the first imputed data set). Justify your approach.
+
+*The provided variables have not been modified further except for changing the dummy variable to a factor. Besides that, the Tree Augmented Naive Bayes requires all variables to be a factor, therefore all non-factor variables were dropped for this algorithm. This approach was chosen due to the fact that factoring vairbles like the hospital number "HOSPNUM" would create 452 levels, which result in unequal levels in test and training data.*
 ```{r eval=T, message=T}
 # Factor the binary outcome variable
 dataTrain$DOD <- as.factor(dataTrain$DOD)
 dataTest$DOD <- as.factor(dataTest$DOD)
+tanTrain <- dataTrain[ ,sapply(dataTrain, is.factor)]
+tanTest <- dataTest[ ,sapply(dataTest, is.factor)]
+```
 
+
+Use the following machine learning algorithms: logistic regression, naive Bayes, Tree Augmented Naive Bayes, and decision tree (specify any parameters you set that are not the default). The packages that you may find useful here are: "glm", "bnlearn", and "rpart", but you may use others if desired. In a table, report the accuracy with 95% confidence intervals for each algorithm.
+```{r eval=T, message=T}
 
 ############## Naive Bayes   ##############
 
@@ -228,8 +232,7 @@ bayesPerfPR <- performance(bayesPred, "prec", "rec")
 
 ############## Tree Augmented NB ##############
 
-tanTrain <- dataTrain[ ,sapply(dataTrain, is.factor)]
-tanTest <- dataTest[ ,sapply(dataTest, is.factor)]
+
 
 tan = tree.bayes(tanTrain, "DOD")
 fittedTan = bn.fit(tan, tanTrain)
